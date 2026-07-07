@@ -2,6 +2,8 @@ import os
 import shutil
 import uuid
 import requests
+import cloudinary
+import cloudinary.uploader
 from datetime import datetime, timedelta
 from typing import Optional, List
 
@@ -22,6 +24,14 @@ ADMIN_CLAVE = os.getenv("ADMIN_CLAVE", "cambiar-esta-clave")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
 NTFY_TOPIC = os.getenv("NTFY_TOPIC", "")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True,
+)
+CLOUDINARY_CONFIGURADO = bool(os.getenv("CLOUDINARY_CLOUD_NAME"))
 
 
 def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]):
@@ -159,11 +169,26 @@ def publicar_animal(
         ext = os.path.splitext(foto.filename)[1].lower()
         if ext not in (".jpg", ".jpeg", ".png", ".webp"):
             raise HTTPException(status_code=400, detail="Formato de imagen no permitido")
-        nombre_archivo = f"{uuid.uuid4()}{ext}"
-        ruta = os.path.join(UPLOAD_DIR, nombre_archivo)
-        with open(ruta, "wb") as f:
-            shutil.copyfileobj(foto.file, f)
-        foto_url = f"/uploads/{nombre_archivo}"
+
+        if CLOUDINARY_CONFIGURADO:
+            try:
+                resultado = cloudinary.uploader.upload(
+                    foto.file,
+                    folder="tablon-putumayo",
+                    public_id=str(uuid.uuid4()),
+                    overwrite=True,
+                    resource_type="image",
+                )
+                foto_url = resultado["secure_url"]
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Error subiendo la imagen: {e}")
+        else:
+            # Respaldo local si Cloudinary no está configurado (no persiste entre despliegues)
+            nombre_archivo = f"{uuid.uuid4()}{ext}"
+            ruta = os.path.join(UPLOAD_DIR, nombre_archivo)
+            with open(ruta, "wb") as f:
+                shutil.copyfileobj(foto.file, f)
+            foto_url = f"/uploads/{nombre_archivo}"
 
     nuevo = Animal(
         **datos.model_dump(),
