@@ -175,8 +175,7 @@ def publicar_animal(
             try:
                 resultado = cloudinary.uploader.upload(
                     foto.file,
-                    folder="tablon-putumayo",
-                    public_id=str(uuid.uuid4()),
+                    public_id=f"tablon-putumayo_{uuid.uuid4()}",
                     overwrite=True,
                     resource_type="image",
                 )
