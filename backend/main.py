@@ -29,12 +29,13 @@ def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]
     Falla en silencio si no está configurado o si el servicio no responde,
     para que nunca bloquee la publicación del animal."""
     if not NTFY_TOPIC:
+        print("NTFY_TOPIC no está configurado, se omite la notificación.")
         return
     try:
         mensaje = f"{propietario} publicó: {raza}"
         if zona:
             mensaje += f" ({zona})"
-        requests.post(
+        resp = requests.post(
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=mensaje.encode("utf-8"),
             headers={
@@ -44,8 +45,9 @@ def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]
             },
             timeout=5,
         )
-    except Exception:
-        pass
+        print(f"Notificación ntfy enviada, status={resp.status_code}, topic={NTFY_TOPIC}")
+    except Exception as e:
+        print(f"Error enviando notificación ntfy: {e}")
 
 Base.metadata.create_all(bind=engine)
 
