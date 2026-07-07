@@ -17,7 +17,9 @@ const ETIQUETAS_PROPOSITO = {
 
 export default function TarjetaAnimal({ animal }) {
   const sello = ETIQUETAS_SELLO[animal.estado] || ETIQUETAS_SELLO.disponible;
-  const fotoSrc = animal.foto_url ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`) : nul`${API_URL}${animal.foto_url}` : null;
+  const fotoSrc = animal.foto_url
+    ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
+    : null;
 
   return (
     <Link to={`/animal/${animal.id}`} style={estilos.tarjeta}>
