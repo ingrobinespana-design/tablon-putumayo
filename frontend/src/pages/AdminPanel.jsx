@@ -214,7 +214,11 @@ export default function AdminPanel() {
         {animales.map((animal) => (
           <div key={animal.id} style={estilos.fila}>
             {animal.foto_url ? (
-              <img src={`${API_URL}${animal.foto_url}`} alt={animal.raza} style={estilos.foto} />
+              <img
+                src={animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`}
+                alt={animal.raza}
+                style={estilos.foto}
+              />
             ) : (
               <div style={estilos.fotoVacia} />
             )}
@@ -257,7 +261,11 @@ export default function AdminPanel() {
           <div style={estilos.modal} onClick={(e) => e.stopPropagation()}>
             {animalDetalle.foto_url ? (
               <img
-                src={`${API_URL}${animalDetalle.foto_url}`}
+                src={
+                  animalDetalle.foto_url.startsWith('http')
+                    ? animalDetalle.foto_url
+                    : `${API_URL}${animalDetalle.foto_url}`
+                }
                 alt={animalDetalle.raza}
                 style={estilos.fotoGrande}
               />
