@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 import re
 
-from models import PropositoEnum, EstadoAnimalEnum
+from models import PropositoEnum, EstadoAnimalEnum, EstadoOfertaEnum
 
 
 # ---------- Animal ----------
@@ -90,18 +90,29 @@ class OfertaOut(BaseModel):
     comprador_telefono: Optional[str]
     monto_ofertado: float
     nota: Optional[str]
+    estado: EstadoOfertaEnum
+    monto_contraoferta: Optional[float]
+    nota_contraoferta: Optional[str]
+    contraoferta_en: Optional[datetime]
     es_ganadora: bool
     comision_pct: float
     comision_monto: Optional[float]
+    monto_final: Optional[float]
     creado_en: datetime
 
     class Config:
         from_attributes = True
 
 
+class ContraofertaCreate(BaseModel):
+    monto_contraoferta: float = Field(..., gt=0)
+    nota_contraoferta: Optional[str] = Field(None, max_length=500)
+
+
 class CerrarVentaRequest(BaseModel):
     oferta_id: str
     comision_pct: Optional[float] = Field(None, ge=0, le=50)
+    usar_contraoferta: bool = False
 
 
 # ---------- Admin auth ----------

@@ -23,11 +23,19 @@ class PropositoEnum(str, enum.Enum):
 
 
 class EstadoAnimalEnum(str, enum.Enum):
-    pendiente = "pendiente"       # esperando aprobación del admin
-    disponible = "disponible"     # aprobado, visible públicamente
+    pendiente = "pendiente"
+    disponible = "disponible"
     en_negociacion = "en_negociacion"
     vendido = "vendido"
-    rechazado = "rechazado"       # no pasó la revisión
+    rechazado = "rechazado"
+
+
+class EstadoOfertaEnum(str, enum.Enum):
+    activa = "activa"
+    contraofertada = "contraofertada"
+    aceptada = "aceptada"
+    rechazada = "rechazada"
+    ganadora = "ganadora"
 
 
 class Animal(Base):
@@ -35,25 +43,21 @@ class Animal(Base):
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
 
-    # Datos del animal
     raza = Column(String(120), nullable=False)
-    es_criollo = Column(Boolean, default=False)  # True si no tiene raza definida
+    es_criollo = Column(Boolean, default=False)
     edad_meses = Column(Integer, nullable=True)
     peso_kg = Column(Float, nullable=True)
     proposito = Column(SAEnum(PropositoEnum), nullable=False, default=PropositoEnum.carne)
     descripcion = Column(Text, nullable=True)
     foto_url = Column(String(500), nullable=True)
 
-    # Precio
-    precio_piso = Column(Float, nullable=True)  # lo que pagaría la pesa local, referencia
-    precio_esperado = Column(Float, nullable=True)  # lo que el dueño espera obtener
+    precio_piso = Column(Float, nullable=True)
+    precio_esperado = Column(Float, nullable=True)
 
-    # Propietario (sin necesidad de cuenta de usuario)
     propietario_nombre = Column(String(150), nullable=False)
     propietario_telefono = Column(String(30), nullable=False)
-    zona = Column(String(150), nullable=True)  # vereda/municipio
+    zona = Column(String(150), nullable=True)
 
-    # Moderación y estado
     estado = Column(SAEnum(EstadoAnimalEnum), nullable=False, default=EstadoAnimalEnum.pendiente)
     motivo_rechazo = Column(Text, nullable=True)
 
@@ -75,10 +79,16 @@ class Oferta(Base):
     monto_ofertado = Column(Float, nullable=False)
     nota = Column(Text, nullable=True)
 
-    # Si la venta se concretó con esta oferta
+    estado = Column(SAEnum(EstadoOfertaEnum), nullable=False, default=EstadoOfertaEnum.activa)
+
+    monto_contraoferta = Column(Float, nullable=True)
+    nota_contraoferta = Column(Text, nullable=True)
+    contraoferta_en = Column(DateTime, nullable=True)
+
     es_ganadora = Column(Boolean, default=False)
-    comision_pct = Column(Float, default=5.0)  # % de comisión sobre la mejora de precio
-    comision_monto = Column(Float, nullable=True)  # calculado cuando se cierra
+    comision_pct = Column(Float, default=10.0)
+    comision_monto = Column(Float, nullable=True)
+    monto_final = Column(Float, nullable=True)
 
     creado_en = Column(DateTime, default=datetime.utcnow)
 

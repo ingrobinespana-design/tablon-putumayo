@@ -11,10 +11,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from database import Base, engine, get_db
-from models import Animal, Oferta, EstadoAnimalEnum, PropositoEnum
+from models import Animal, Oferta, EstadoAnimalEnum, PropositoEnum, EstadoOfertaEnum
 from schemas import (
     AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar,
-    OfertaCreate, OfertaOut, CerrarVentaRequest, AdminLogin,
+    OfertaCreate, OfertaOut, ContraofertaCreate, CerrarVentaRequest, AdminLogin,
 )
 
 ADMIN_CLAVE = os.getenv("ADMIN_CLAVE", "cambiar-esta-clave")
@@ -27,7 +27,7 @@ app = FastAPI(title="Ganado Putumayo API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ajustar a dominio real del frontend en producción
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,10 +35,6 @@ app.add_middleware(
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# ---------------------------------------------------------------------------
-# Rate limiting muy simple en memoria (por IP) para evitar spam de publicaciones.
-# Para producción real con más tráfico, esto debería pasar a Redis.
-# ---------------------------------------------------------------------------
 _publicaciones_recientes: dict[str, list[datetime]] = {}
 LIMITE_PUBLICACIONES = 3
 VENTANA_HORAS = 24
@@ -78,7 +74,6 @@ def listar_animales_publico(
     zona: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    """Catálogo público: solo animales aprobados y disponibles o en negociación."""
     query = db.query(Animal).filter(
         Animal.estado.in_([EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion])
     )
@@ -114,11 +109,6 @@ def publicar_animal(
     foto: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
 ):
-    """
-    Publicación abierta sin necesidad de cuenta, pero queda en estado
-    'pendiente' hasta que el admin la revise y apruebe. Esto evita que
-    entre basura/spam directo al catálogo público.
-    """
     ip = request.client.host if request.client else "unknown"
     chequear_rate_limit(ip)
 
@@ -160,11 +150,6 @@ def publicar_animal(
 
 @app.post("/api/animales/{animal_id}/ofertas", response_model=OfertaOut, status_code=201)
 def registrar_oferta(animal_id: str, oferta: OfertaCreate, db: Session = Depends(get_db)):
-    """
-    Registro de interés/oferta. En esta v1 el contacto real ocurre por WhatsApp
-    (botón en el frontend), pero registramos la oferta para que el admin
-    tenga trazabilidad y pueda calcular comisión al cerrar venta.
-    """
     animal = db.query(Animal).filter(Animal.id == animal_id).first()
     if not animal or animal.estado not in (EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion):
         raise HTTPException(status_code=404, detail="Animal no disponible")
@@ -181,7 +166,7 @@ def registrar_oferta(animal_id: str, oferta: OfertaCreate, db: Session = Depends
 
 
 # ---------------------------------------------------------------------------
-# Endpoints de administración (protegidos con clave simple vía header)
+# Endpoints de administración
 # ---------------------------------------------------------------------------
 
 @app.post("/api/admin/login")
@@ -201,6 +186,14 @@ def listar_todos_admin(
     if estado:
         query = query.filter(Animal.estado == estado)
     return query.order_by(Animal.creado_en.desc()).all()
+
+
+@app.get("/api/admin/animales/{animal_id}", response_model=AnimalAdminOut)
+def obtener_animal_admin(animal_id: str, db: Session = Depends(get_db), _=Depends(verificar_admin)):
+    animal = db.query(Animal).filter(Animal.id == animal_id).first()
+    if not animal:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    return animal
 
 
 @app.post("/api/admin/animales/{animal_id}/aprobar", response_model=AnimalAdminOut)
@@ -237,6 +230,28 @@ def listar_ofertas_admin(animal_id: str, db: Session = Depends(get_db), _=Depend
     return db.query(Oferta).filter(Oferta.animal_id == animal_id).order_by(Oferta.monto_ofertado.desc()).all()
 
 
+@app.post("/api/admin/ofertas/{oferta_id}/contraofertar", response_model=OfertaOut)
+def contraofertar(
+    oferta_id: str,
+    datos: ContraofertaCreate,
+    db: Session = Depends(get_db),
+    _=Depends(verificar_admin),
+):
+    """El vendedor (a través del admin) responde con un monto distinto al ofrecido."""
+    oferta = db.query(Oferta).filter(Oferta.id == oferta_id).first()
+    if not oferta:
+        raise HTTPException(status_code=404, detail="Oferta no encontrada")
+
+    oferta.monto_contraoferta = datos.monto_contraoferta
+    oferta.nota_contraoferta = datos.nota_contraoferta
+    oferta.contraoferta_en = datetime.utcnow()
+    oferta.estado = EstadoOfertaEnum.contraofertada
+
+    db.commit()
+    db.refresh(oferta)
+    return oferta
+
+
 @app.post("/api/admin/animales/{animal_id}/cerrar-venta", response_model=AnimalAdminOut)
 def cerrar_venta(
     animal_id: str,
@@ -253,13 +268,26 @@ def cerrar_venta(
         raise HTTPException(status_code=404, detail="Oferta no encontrada")
 
     pct = datos.comision_pct if datos.comision_pct is not None else oferta.comision_pct
-    base_comparacion = animal.precio_piso or 0
-    mejora = max(oferta.monto_ofertado - base_comparacion, 0)
-    comision = round(mejora * (pct / 100), 2) if mejora > 0 else round(oferta.monto_ofertado * (pct / 100), 2)
+
+    monto_cierre = oferta.monto_ofertado
+    if datos.usar_contraoferta and oferta.monto_contraoferta:
+        monto_cierre = oferta.monto_contraoferta
+
+    comision = round(monto_cierre * (pct / 100), 2)
 
     oferta.es_ganadora = True
+    oferta.estado = EstadoOfertaEnum.ganadora
     oferta.comision_pct = pct
     oferta.comision_monto = comision
+    oferta.monto_final = monto_cierre
+
+    # Cualquier otra oferta activa para este animal queda marcada como rechazada
+    otras = db.query(Oferta).filter(
+        Oferta.animal_id == animal_id, Oferta.id != oferta.id
+    ).all()
+    for otra in otras:
+        if otra.estado in (EstadoOfertaEnum.activa, EstadoOfertaEnum.contraofertada):
+            otra.estado = EstadoOfertaEnum.rechazada
 
     animal.estado = EstadoAnimalEnum.vendido
     animal.vendido_en = datetime.utcnow()
