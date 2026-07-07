@@ -96,7 +96,9 @@ export default function DetalleAnimal() {
   }
 
   const sello = ETIQUETAS_SELLO[animal.estado] || ETIQUETAS_SELLO.disponible;
-  const fotoSrc = animal.foto_url ? `${API_URL}${animal.foto_url}` : null;
+  const fotoSrc = animal.foto_url
+    ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
+    : null;
   const desglose = monto ? calcularComision(monto) : null;
 
   return (
