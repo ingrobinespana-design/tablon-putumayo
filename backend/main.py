@@ -30,6 +30,7 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET"),
     secure=True,
+    signature_algorithm="sha256",
 )
 CLOUDINARY_CONFIGURADO = bool(os.getenv("CLOUDINARY_CLOUD_NAME"))
 
