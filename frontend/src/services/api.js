@@ -6,16 +6,13 @@ async function manejarRespuesta(res) {
     try {
       const data = await res.json();
       detalle = data.detail || detalle;
-    } catch (_) {
-      // respuesta sin cuerpo JSON
-    }
+    } catch (_) {}
     throw new Error(detalle);
   }
   return res.json();
 }
 
 export const api = {
-  // ---------- Público ----------
   listarAnimales: async (filtros = {}) => {
     const params = new URLSearchParams();
     if (filtros.proposito) params.append('proposito', filtros.proposito);
@@ -30,10 +27,7 @@ export const api = {
   },
 
   publicarAnimal: async (formData) => {
-    const res = await fetch(`${API_URL}/api/animales`, {
-      method: 'POST',
-      body: formData,
-    });
+    const res = await fetch(`${API_URL}/api/animales`, { method: 'POST', body: formData });
     return manejarRespuesta(res);
   },
 
@@ -64,6 +58,13 @@ export const api = {
     return manejarRespuesta(res);
   },
 
+  adminObtenerAnimal: async (clave, animalId) => {
+    const res = await fetch(`${API_URL}/api/admin/animales/${animalId}`, {
+      headers: { 'X-Admin-Clave': clave },
+    });
+    return manejarRespuesta(res);
+  },
+
   adminAprobar: async (clave, animalId) => {
     const res = await fetch(`${API_URL}/api/admin/animales/${animalId}/aprobar`, {
       method: 'POST',
@@ -88,11 +89,27 @@ export const api = {
     return manejarRespuesta(res);
   },
 
-  adminCerrarVenta: async (clave, animalId, ofertaId, comisionPct) => {
+  adminContraofertar: async (clave, ofertaId, montoContraoferta, notaContraoferta) => {
+    const res = await fetch(`${API_URL}/api/admin/ofertas/${ofertaId}/contraofertar`, {
+      method: 'POST',
+      headers: { 'X-Admin-Clave': clave, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        monto_contraoferta: montoContraoferta,
+        nota_contraoferta: notaContraoferta || null,
+      }),
+    });
+    return manejarRespuesta(res);
+  },
+
+  adminCerrarVenta: async (clave, animalId, ofertaId, comisionPct, usarContraoferta = false) => {
     const res = await fetch(`${API_URL}/api/admin/animales/${animalId}/cerrar-venta`, {
       method: 'POST',
       headers: { 'X-Admin-Clave': clave, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ oferta_id: ofertaId, comision_pct: comisionPct }),
+      body: JSON.stringify({
+        oferta_id: ofertaId,
+        comision_pct: comisionPct,
+        usar_contraoferta: usarContraoferta,
+      }),
     });
     return manejarRespuesta(res);
   },
