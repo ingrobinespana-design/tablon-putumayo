@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+import requests
 from datetime import datetime, timedelta
 from typing import Optional, List
 
@@ -19,7 +20,32 @@ from schemas import (
 
 ADMIN_CLAVE = os.getenv("ADMIN_CLAVE", "cambiar-esta-clave")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+NTFY_TOPIC = os.getenv("NTFY_TOPIC", "")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]):
+    """Envía una notificación push vía ntfy.sh cuando alguien publica un animal.
+    Falla en silencio si no está configurado o si el servicio no responde,
+    para que nunca bloquee la publicación del animal."""
+    if not NTFY_TOPIC:
+        return
+    try:
+        mensaje = f"{propietario} publicó: {raza}"
+        if zona:
+            mensaje += f" ({zona})"
+        requests.post(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=mensaje.encode("utf-8"),
+            headers={
+                "Title": "Nueva publicación en Tablón Putumayo",
+                "Priority": "high",
+                "Tags": "cow",
+            },
+            timeout=5,
+        )
+    except Exception:
+        pass
 
 Base.metadata.create_all(bind=engine)
 
@@ -145,6 +171,9 @@ def publicar_animal(
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
+
+    notificar_publicacion_nueva(nuevo.raza, nuevo.propietario_nombre, nuevo.zona)
+
     return nuevo
 
 
