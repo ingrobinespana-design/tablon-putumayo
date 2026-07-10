@@ -16,7 +16,7 @@ const ETIQUETAS_PROPOSITO = {
   doble_proposito: 'Doble propósito',
 };
 
-const COMISION_PCT = 10; // 10% total, 5% cada parte
+const COMISION_PCT = 5; // 5% total, 2.5% cada parte
 
 function calcularComision(monto) {
   const total = parseFloat(monto) || 0;

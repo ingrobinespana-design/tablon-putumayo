@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 
-const COMISION_PCT = 10;
+const COMISION_PCT = 5;
 
 const PESTAÑAS = [
   { valor: 'pendiente', etiqueta: 'Por revisar' },

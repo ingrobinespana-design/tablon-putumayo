@@ -86,7 +86,7 @@ class Oferta(Base):
     contraoferta_en = Column(DateTime, nullable=True)
 
     es_ganadora = Column(Boolean, default=False)
-    comision_pct = Column(Float, default=10.0)
+    comision_pct = Column(Float, default=5.0)
     comision_monto = Column(Float, nullable=True)
     monto_final = Column(Float, nullable=True)
 
