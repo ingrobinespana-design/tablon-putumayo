@@ -22,7 +22,8 @@ from schemas import (
 
 ADMIN_CLAVE = os.getenv("ADMIN_CLAVE", "cambiar-esta-clave")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
-NTFY_TOPIC = os.getenv("NTFY_TOPIC", "")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 cloudinary.config(
@@ -36,29 +37,24 @@ CLOUDINARY_CONFIGURADO = bool(os.getenv("CLOUDINARY_CLOUD_NAME"))
 
 
 def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]):
-    """Envía una notificación push vía ntfy.sh cuando alguien publica un animal.
+    """Envía una notificación por Telegram cuando alguien publica un animal.
     Falla en silencio si no está configurado o si el servicio no responde,
     para que nunca bloquee la publicación del animal."""
-    if not NTFY_TOPIC:
-        print("NTFY_TOPIC no está configurado, se omite la notificación.")
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("Telegram no está configurado, se omite la notificación.")
         return
     try:
-        mensaje = f"{propietario} publicó: {raza}"
+        mensaje = f"🐄 Nueva publicación en Tablón Putumayo\n\n{propietario} publicó: {raza}"
         if zona:
             mensaje += f" ({zona})"
         resp = requests.post(
-            f"https://ntfy.sh/{NTFY_TOPIC}",
-            data=mensaje.encode("utf-8"),
-            headers={
-                "Title": "Nueva publicación en Tablón Putumayo",
-                "Priority": "high",
-                "Tags": "cow",
-            },
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            json={"chat_id": TELEGRAM_CHAT_ID, "text": mensaje},
             timeout=5,
         )
-        print(f"Notificación ntfy enviada, status={resp.status_code}, topic={NTFY_TOPIC}")
+        print(f"Notificación Telegram enviada, status={resp.status_code}")
     except Exception as e:
-        print(f"Error enviando notificación ntfy: {e}")
+        print(f"Error enviando notificación Telegram: {e}")
 
 Base.metadata.create_all(bind=engine)
 
