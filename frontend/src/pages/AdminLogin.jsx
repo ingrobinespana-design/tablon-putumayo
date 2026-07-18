@@ -18,7 +18,7 @@ export default function AdminLogin() {
       sessionStorage.setItem('admin_clave', clave);
       navigate('/admin/panel');
     } catch (e) {
-      setError('Clave incorrecta');
+      setError(e.message || 'Clave incorrecta');
     } finally {
       setCargando(false);
     }
