@@ -6,21 +6,40 @@ const TIMEOUT_MS = 15000;
 // La publicación sube fotos y en conexión rural puede tardar bastante más.
 const TIMEOUT_SUBIDA_MS = 90000;
 
-async function pedir(url, opciones = {}, timeoutMs = TIMEOUT_MS) {
+async function intentar(url, opciones, timeoutMs) {
   const controlador = new AbortController();
   const temporizador = setTimeout(() => controlador.abort(), timeoutMs);
   try {
     return await fetch(url, { ...opciones, signal: controlador.signal });
-  } catch (e) {
-    if (e.name === 'AbortError') {
-      throw new Error(
-        'El servidor está tardando en responder. Espera un minuto e intenta de nuevo.'
-      );
-    }
-    throw new Error('No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.');
   } finally {
     clearTimeout(temporizador);
   }
+}
+
+async function pedir(url, opciones = {}, timeoutMs = TIMEOUT_MS) {
+  // El servidor gratuito se duerme con la inactividad y tarda ~1 minuto en
+  // despertar. Las lecturas (GET) se reintentan hasta cubrir ese arranque;
+  // los envíos (POST) no, para no duplicar publicaciones ni ofertas.
+  const esLectura = !opciones.method || opciones.method === 'GET';
+  const intentos = esLectura ? 6 : 1;
+  let ultimoError = null;
+  for (let i = 0; i < intentos; i++) {
+    try {
+      return await intentar(url, opciones, timeoutMs);
+    } catch (e) {
+      ultimoError = e;
+      if (e.name !== 'AbortError' && esLectura) {
+        // Conexión rechazada: espera breve antes de reintentar.
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
+  }
+  if (ultimoError && ultimoError.name === 'AbortError') {
+    throw new Error(
+      'El servidor está tardando en responder. Espera un minuto e intenta de nuevo.'
+    );
+  }
+  throw new Error('No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.');
 }
 
 async function manejarRespuesta(res) {

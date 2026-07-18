@@ -6,13 +6,18 @@ import TarjetaAnimal from '../components/TarjetaAnimal';
 export default function Catalogo() {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [despertando, setDespertando] = useState(false);
   const [error, setError] = useState(null);
   const [filtroProposito, setFiltroProposito] = useState('');
   const [filtroZona, setFiltroZona] = useState('');
 
   async function cargar() {
     setCargando(true);
+    setDespertando(false);
     setError(null);
+    // Si tarda más de 8s es porque el servidor gratuito estaba dormido
+    // y está arrancando (~1 min); avisamos para que el visitante espere.
+    const avisoDespertar = setTimeout(() => setDespertando(true), 8000);
     try {
       const datos = await api.listarAnimales({
         proposito: filtroProposito || undefined,
@@ -22,6 +27,8 @@ export default function Catalogo() {
     } catch (e) {
       setError('No pudimos cargar el catálogo. Intenta de nuevo en un momento.');
     } finally {
+      clearTimeout(avisoDespertar);
+      setDespertando(false);
       setCargando(false);
     }
   }
@@ -70,7 +77,13 @@ export default function Catalogo() {
         </button>
       </form>
 
-      {cargando && <p style={estilos.mensaje}>Cargando animales…</p>}
+      {cargando && (
+        <p style={estilos.mensaje}>
+          {despertando
+            ? 'El servidor está despertando, esto puede tardar hasta un minuto. No cierres la página…'
+            : 'Cargando animales…'}
+        </p>
+      )}
       {error && <p style={{ ...estilos.mensaje, color: 'var(--rojo-alerta)' }}>{error}</p>}
 
       {!cargando && !error && animales.length === 0 && (
