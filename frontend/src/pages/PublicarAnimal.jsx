@@ -196,10 +196,14 @@ export default function PublicarAnimal() {
             <textarea
               value={form.descripcion}
               onChange={(e) => actualizar('descripcion', e.target.value)}
-              rows={3}
+              rows={4}
+              maxLength={2000}
               placeholder="Cualquier detalle que ayude: salud, vacunas, temperamento…"
               style={{ ...estilos.input, resize: 'vertical' }}
             />
+            <span style={{ fontSize: '12px', textAlign: 'right', fontWeight: 500, color: form.descripcion.length >= 2000 ? 'var(--rojo-alerta)' : 'var(--carbon-suave)' }}>
+              {form.descripcion.length} / 2000 caracteres
+            </span>
           </label>
 
           <label style={estilos.labelFoto}>

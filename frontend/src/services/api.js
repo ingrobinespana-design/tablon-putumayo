@@ -42,12 +42,32 @@ async function pedir(url, opciones = {}, timeoutMs = TIMEOUT_MS) {
   throw new Error('No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.');
 }
 
+// Nombres amigables de los campos, para mensajes de error claros.
+const NOMBRE_CAMPO = {
+  titulo: 'título', descripcion: 'descripción', precio_esperado: 'precio',
+  propietario_nombre: 'tu nombre', propietario_telefono: 'tu WhatsApp / teléfono',
+  raza: 'raza o tipo', especie: 'especie', cantidad: 'cantidad', zona: 'zona',
+  edad_meses: 'edad', peso_kg: 'peso', categoria: 'categoría', atributos: 'datos del vehículo',
+};
+
 async function manejarRespuesta(res) {
   if (!res.ok) {
     let detalle = 'Ocurrió un error inesperado';
     try {
       const data = await res.json();
-      detalle = data.detail || detalle;
+      if (Array.isArray(data.detail)) {
+        // Errores de validación (422): nombrar los campos con problema.
+        const campos = data.detail
+          .map((e) => (Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : ''))
+          .map((c) => NOMBRE_CAMPO[c] || c)
+          .filter(Boolean);
+        const unicos = [...new Set(campos)];
+        detalle = unicos.length
+          ? `Revisa estos campos: ${unicos.join(', ')}.`
+          : (data.detail[0] && data.detail[0].msg) || detalle;
+      } else if (typeof data.detail === 'string') {
+        detalle = data.detail;
+      }
     } catch (_) {}
     throw new Error(detalle);
   }

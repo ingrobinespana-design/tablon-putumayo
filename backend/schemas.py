@@ -20,7 +20,7 @@ class AnimalCreate(BaseModel):
     edad_meses: Optional[int] = Field(None, ge=0, le=600)
     peso_kg: Optional[float] = Field(None, ge=0, le=2000)
     proposito: Optional[PropositoEnum] = None
-    descripcion: Optional[str] = Field(None, max_length=1000)
+    descripcion: Optional[str] = Field(None, max_length=2000)
 
     precio_piso: Optional[float] = Field(None, ge=0)
     precio_esperado: Optional[float] = Field(None, ge=0)
@@ -83,7 +83,7 @@ class PublicacionCreate(BaseModel):
     categoria: str = Field(..., min_length=2, max_length=20)
     titulo: str = Field(..., min_length=3, max_length=150)
     atributos: dict = Field(default_factory=dict)
-    descripcion: Optional[str] = Field(None, max_length=1000)
+    descripcion: Optional[str] = Field(None, max_length=2000)
     precio_esperado: Optional[float] = Field(None, ge=0)
     propietario_nombre: str = Field(..., min_length=3, max_length=150)
     propietario_telefono: str = Field(..., min_length=7, max_length=30)

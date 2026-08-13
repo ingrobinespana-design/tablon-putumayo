@@ -235,8 +235,11 @@ export default function PublicarVehiculo() {
           <label style={estilos.label}>
             Descripción (opcional)
             <textarea value={form.descripcion} onChange={(e) => actualizar('descripcion', e.target.value)}
-              rows={3} placeholder="Estado, mantenimientos, papeles al día, motivo de venta…"
+              rows={4} maxLength={2000} placeholder="Estado, mantenimientos, papeles al día, motivo de venta…"
               style={{ ...estilos.input, resize: 'vertical' }} />
+            <span style={{ ...estilos.contadorCar, color: form.descripcion.length >= 2000 ? 'var(--rojo-alerta)' : 'var(--carbon-suave)' }}>
+              {form.descripcion.length} / 2000 caracteres
+            </span>
           </label>
         </div>
 
@@ -338,6 +341,7 @@ const estilos = {
   pieInput: { padding: '7px 9px', borderRadius: 'var(--radius)', border: '1.5px solid var(--linea)', background: 'white', fontSize: '12.5px', width: '100%' },
   agregarFoto: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '96px', border: '1.5px dashed var(--linea)', borderRadius: 'var(--radius)', color: 'var(--verde-pasto)', cursor: 'pointer', fontWeight: 600 },
   contador: { fontSize: '12.5px', color: 'var(--carbon-suave)', margin: '4px 0 0' },
+  contadorCar: { fontSize: '12px', textAlign: 'right', fontWeight: 500 },
   exitoBox: { textAlign: 'center', padding: '40px', background: 'var(--crema-card)', borderRadius: 'var(--radius)', border: '1px solid var(--linea)' },
   exitoTexto: { color: 'var(--carbon-suave)', lineHeight: 1.6, margin: '12px 0 24px' },
 };
