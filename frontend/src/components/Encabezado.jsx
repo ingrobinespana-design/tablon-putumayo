@@ -9,8 +9,8 @@ export default function Encabezado() {
         <Link to="/" style={estilos.marca}>
           <span style={estilos.marcaIcono}>⛓</span>
           <div>
-            <div style={estilos.marcaTexto}>Tablón Putumayo</div>
-            <div style={estilos.marcaSub}>ganado y especies menores</div>
+            <div style={estilos.marcaTexto}>Vende Putumayo</div>
+            <div style={estilos.marcaSub}>compra y venta en el Putumayo</div>
           </div>
         </Link>
         <nav style={estilos.nav}>

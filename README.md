@@ -1,4 +1,7 @@
-# Tablón Putumayo — Marketplace de ganado en pie
+# Vende Putumayo — Marketplace del Putumayo
+
+> Antes "Tablón Putumayo". Empezó como marketplace de ganado/animales y se está
+> ampliando a compra y venta de todo (fincas, vehículos, casas, electrodomésticos…).
 
 Plataforma simple para que ganaderos publiquen animales y reciban varias
 ofertas de compradores (otros ganaderos, criadores, comisionistas), en lugar

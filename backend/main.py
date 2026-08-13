@@ -44,7 +44,7 @@ def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]
         print("Telegram no está configurado, se omite la notificación.")
         return
     try:
-        mensaje = f"🐄 Nueva publicación en Tablón Putumayo\n\n{propietario} publicó: {raza}"
+        mensaje = f"📣 Nueva publicación en Vende Putumayo\n\n{propietario} publicó: {raza}"
         if zona:
             mensaje += f" ({zona})"
         resp = requests.post(
@@ -58,7 +58,7 @@ def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Ganado Putumayo API")
+app = FastAPI(title="Vende Putumayo API")
 
 app.add_middleware(
     CORSMiddleware,

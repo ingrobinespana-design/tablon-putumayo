@@ -67,7 +67,7 @@ export default function DetalleAnimal() {
     if (!animal) return '#';
     const telefonoLimpio = animal.propietario_telefono.replace(/\D/g, '');
     const mensaje = encodeURIComponent(
-      `Hola, vi tu publicación de ${animal.raza} en Tablón Putumayo. Me interesa, ¿podemos hablar?`
+      `Hola, vi tu publicación de ${animal.raza} en Vende Putumayo. Me interesa, ¿podemos hablar?`
     );
     return `https://wa.me/${telefonoLimpio}?text=${mensaje}`;
   }
