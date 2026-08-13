@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import {
   VEHICULO_TIPOS, VEHICULO_TRANSMISION, VEHICULO_COMBUSTIBLE, MAX_FOTOS,
 } from '../config/catalogo';
+import { marcasDe, lineasDe, OTRA } from '../config/vehiculos_data';
 
 export default function PublicarVehiculo() {
   const navigate = useNavigate();
@@ -13,7 +14,10 @@ export default function PublicarVehiculo() {
   const [publicado, setPublicado] = useState(false);
 
   const [form, setForm] = useState({
-    tipo: 'carro', marca: '', modelo: '', anio: '', kilometraje: '',
+    tipo: 'carro',
+    marcaSel: '', marcaOtra: '',      // marca por lista o texto libre ("Otra")
+    modeloSel: '', modeloOtra: '',    // línea por lista o texto libre
+    anio: '', kilometraje: '',
     transmision: '', combustible: '', descripcion: '',
     precio_esperado: '', propietario_nombre: '', propietario_telefono: '', zona: '',
   });
@@ -23,6 +27,22 @@ export default function PublicarVehiculo() {
   function actualizar(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
+
+  // Al cambiar tipo o marca, se reinician los campos dependientes.
+  function cambiarTipo(v) {
+    setForm((p) => ({ ...p, tipo: v, marcaSel: '', marcaOtra: '', modeloSel: '', modeloOtra: '' }));
+  }
+  function cambiarMarca(v) {
+    setForm((p) => ({ ...p, marcaSel: v, marcaOtra: '', modeloSel: '', modeloOtra: '' }));
+  }
+
+  const marcasDisponibles = marcasDe(form.tipo);
+  const marcaEfectiva = form.marcaSel === OTRA ? form.marcaOtra.trim() : form.marcaSel;
+  const lineas = form.marcaSel && form.marcaSel !== OTRA ? lineasDe(form.marcaSel) : [];
+  const tieneListaLineas = lineas.length > 0;
+  const modeloEfectivo = tieneListaLineas
+    ? (form.modeloSel === OTRA ? form.modeloOtra.trim() : form.modeloSel)
+    : form.modeloOtra.trim();
 
   function agregarFotos(e) {
     const nuevas = Array.from(e.target.files || []);
@@ -49,18 +69,18 @@ export default function PublicarVehiculo() {
     e.preventDefault();
     setError(null);
 
-    const titulo = [form.marca, form.modelo, form.anio].filter(Boolean).join(' ').trim();
-    if (!titulo) {
-      setError('Escribe al menos la marca y el modelo.');
+    if (!marcaEfectiva || !modeloEfectivo) {
+      setError('Elige (o escribe) la marca y el modelo / línea.');
       return;
     }
+    const titulo = [marcaEfectiva, modeloEfectivo, form.anio].filter(Boolean).join(' ').trim();
 
     setEnviando(true);
     try {
       const atributos = {
         tipo: form.tipo,
-        marca: form.marca,
-        modelo: form.modelo,
+        marca: marcaEfectiva,
+        modelo: modeloEfectivo,
         anio: form.anio ? Number(form.anio) : null,
         kilometraje: form.kilometraje ? Number(form.kilometraje) : null,
         transmision: form.transmision || null,
@@ -121,7 +141,7 @@ export default function PublicarVehiculo() {
 
           <label style={estilos.label}>
             Tipo *
-            <select value={form.tipo} onChange={(e) => actualizar('tipo', e.target.value)} style={estilos.input}>
+            <select value={form.tipo} onChange={(e) => cambiarTipo(e.target.value)} style={estilos.input}>
               {VEHICULO_TIPOS.map((t) => (<option key={t.valor} value={t.valor}>{t.label}</option>))}
             </select>
           </label>
@@ -129,13 +149,36 @@ export default function PublicarVehiculo() {
           <div style={estilos.fila}>
             <label style={estilos.label}>
               Marca *
-              <input type="text" value={form.marca} onChange={(e) => actualizar('marca', e.target.value)}
-                placeholder="Ej: Toyota, Chevrolet, Yamaha…" required style={estilos.input} />
+              <select value={form.marcaSel} onChange={(e) => cambiarMarca(e.target.value)} required style={estilos.input}>
+                <option value="">Elige la marca…</option>
+                {marcasDisponibles.map((m) => (<option key={m} value={m}>{m}</option>))}
+                <option value={OTRA}>Otra marca…</option>
+              </select>
+              {form.marcaSel === OTRA && (
+                <input type="text" value={form.marcaOtra} onChange={(e) => actualizar('marcaOtra', e.target.value)}
+                  placeholder="Escribe la marca" required style={{ ...estilos.input, marginTop: '8px' }} />
+              )}
             </label>
+
             <label style={estilos.label}>
               Modelo / línea *
-              <input type="text" value={form.modelo} onChange={(e) => actualizar('modelo', e.target.value)}
-                placeholder="Ej: Hilux, Spark, NMAX…" required style={estilos.input} />
+              {tieneListaLineas ? (
+                <>
+                  <select value={form.modeloSel} onChange={(e) => actualizar('modeloSel', e.target.value)} required style={estilos.input}>
+                    <option value="">Elige la línea…</option>
+                    {lineas.map((l) => (<option key={l} value={l}>{l}</option>))}
+                    <option value={OTRA}>Otra línea…</option>
+                  </select>
+                  {form.modeloSel === OTRA && (
+                    <input type="text" value={form.modeloOtra} onChange={(e) => actualizar('modeloOtra', e.target.value)}
+                      placeholder="Escribe la línea / modelo" required style={{ ...estilos.input, marginTop: '8px' }} />
+                  )}
+                </>
+              ) : (
+                <input type="text" value={form.modeloOtra} onChange={(e) => actualizar('modeloOtra', e.target.value)}
+                  placeholder={form.marcaSel ? 'Escribe la línea / modelo' : 'Ej: Hilux, Spark, NMAX…'}
+                  required style={estilos.input} />
+              )}
             </label>
           </div>
 
