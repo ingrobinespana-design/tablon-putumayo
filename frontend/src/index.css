@@ -138,6 +138,32 @@ input, select, textarea {
   padding: 0 20px;
 }
 
+/* Grilla del catálogo — se adapta sola al ancho (PC, tablet, teléfono) */
+.catalogo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 560px) {
+  .catalogo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
+
+/* Detalle del animal — dos columnas en PC/tablet, una sola en teléfono */
+.detalle-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+}
+@media (max-width: 820px) {
+  .detalle-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+
 /* Sello tipo marca de hierro para estado del animal */
 .sello {
   display: inline-flex;

@@ -5,7 +5,9 @@ import TarjetaAnimal from '../components/TarjetaAnimal';
 import { ESPECIES, PROPOSITOS } from '../config/catalogo';
 
 export default function Catalogo() {
+  const POR_PAGINA = 12;
   const [animales, setAnimales] = useState([]);
+  const [visibles, setVisibles] = useState(POR_PAGINA);
   const [cargando, setCargando] = useState(true);
   const [despertando, setDespertando] = useState(false);
   const [error, setError] = useState(null);
@@ -17,6 +19,7 @@ export default function Catalogo() {
     setCargando(true);
     setDespertando(false);
     setError(null);
+    setVisibles(POR_PAGINA);
     // Si tarda más de 8s es porque el servidor gratuito estaba dormido
     // y está arrancando (~1 min); avisamos para que el visitante espere.
     const avisoDespertar = setTimeout(() => setDespertando(true), 8000);
@@ -65,7 +68,7 @@ export default function Catalogo() {
           <option value="">Todas las especies</option>
           {ESPECIES.map((e) => (
             <option key={e.valor} value={e.valor}>
-              {e.emoji} {e.label}
+              {e.label}
             </option>
           ))}
         </select>
@@ -110,11 +113,24 @@ export default function Catalogo() {
       )}
 
       {!cargando && animales.length > 0 && (
-        <div style={estilos.grid}>
-          {animales.map((animal) => (
-            <TarjetaAnimal key={animal.id} animal={animal} />
-          ))}
-        </div>
+        <>
+          <div className="catalogo-grid">
+            {animales.slice(0, visibles).map((animal) => (
+              <TarjetaAnimal key={animal.id} animal={animal} />
+            ))}
+          </div>
+
+          {visibles < animales.length && (
+            <div style={estilos.verMasCaja}>
+              <button
+                className="btn btn-secundario"
+                onClick={() => setVisibles((v) => v + POR_PAGINA)}
+              >
+                Ver más animales ({animales.length - visibles} restantes)
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -172,9 +188,9 @@ const estilos = {
     marginBottom: '8px',
     color: 'var(--verde-pasto-oscuro)',
   },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-    gap: '20px',
+  verMasCaja: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: '28px',
   },
 };

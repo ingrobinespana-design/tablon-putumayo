@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
+import { MessageCircle, MapPin, ArrowLeft, ImageOff } from 'lucide-react';
 import { api, API_URL } from '../services/api';
-import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
+import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, comisionPorEspecie } from '../config/catalogo';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -10,11 +10,9 @@ const ETIQUETAS_SELLO = {
   vendido: { texto: 'Vendido', clase: 'sello-vendido' },
 };
 
-const COMISION_PCT = 5; // 5% total, 2.5% cada parte
-
-function calcularComision(monto) {
+function calcularComision(monto, pct) {
   const total = parseFloat(monto) || 0;
-  const comisionTotal = total * (COMISION_PCT / 100);
+  const comisionTotal = total * (pct / 100);
   const comisionCadaParte = comisionTotal / 2;
   const totalComprador = total + comisionCadaParte;
   const recibeVendedor = total - comisionCadaParte;
@@ -93,8 +91,8 @@ export default function DetalleAnimal() {
   const fotoSrc = animal.foto_url
     ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
     : null;
-  const desglose = monto ? calcularComision(monto) : null;
-  const emoji = EMOJI_ESPECIE[animal.especie] || '🐮';
+  const comisionPct = comisionPorEspecie(animal.especie);
+  const desglose = monto ? calcularComision(monto, comisionPct) : null;
   const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
   const esLote = animal.cantidad > 1;
 
@@ -104,13 +102,14 @@ export default function DetalleAnimal() {
         <ArrowLeft size={16} /> Volver al catálogo
       </Link>
 
-      <div style={estilos.layout}>
+      <div className="detalle-layout">
         <div style={estilos.fotoContenedor}>
           {fotoSrc ? (
             <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
           ) : (
             <div style={estilos.fotoPlaceholder}>
-              <span style={{ fontSize: '96px' }}>{emoji}</span>
+              <ImageOff size={54} color="var(--linea)" />
+              <span style={estilos.sinFoto}>Sin foto</span>
             </div>
           )}
         </div>
@@ -126,7 +125,7 @@ export default function DetalleAnimal() {
           <div style={estilos.datos}>
             <div style={estilos.dato}>
               <span style={estilos.datoLabel}>Especie</span>
-              <span>{emoji} {etiquetaEspecie}</span>
+              <span>{etiquetaEspecie}</span>
             </div>
             {esLote && (
               <div style={estilos.dato}>
@@ -186,8 +185,8 @@ export default function DetalleAnimal() {
               <h3 style={estilos.ofertaTitulo}>Registrar oferta formal</h3>
               <p style={estilos.ofertaTexto}>
                 Esto ayuda al propietario a comparar todas las ofertas antes de decidir.
-                Si tu oferta es aceptada, se aplica una comisión del <strong>{COMISION_PCT}%</strong> dividida
-                en partes iguales entre comprador y vendedor ({COMISION_PCT / 2}% cada uno).
+                Si tu oferta es aceptada, se aplica una comisión del <strong>{comisionPct}%</strong> dividida
+                en partes iguales entre comprador y vendedor ({comisionPct / 2}% cada uno).
               </p>
 
               {enviado ? (
@@ -237,7 +236,7 @@ export default function DetalleAnimal() {
                           <span>{formatCOP(parseFloat(monto))}</span>
                         </div>
                         <div style={{ ...estilos.desgloseFila, color: 'var(--terracota)' }}>
-                          <span>Tu comisión ({COMISION_PCT / 2}%)</span>
+                          <span>Tu comisión ({comisionPct / 2}%)</span>
                           <span>+ {formatCOP(desglose.comisionCadaParte)}</span>
                         </div>
                         <div style={estilos.desgloseSeparador} />
@@ -282,11 +281,6 @@ const estilos = {
     fontSize: '14px',
     marginBottom: '20px',
   },
-  layout: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '36px',
-  },
   fotoContenedor: {
     background: '#EDE6D3',
     borderRadius: 'var(--radius)',
@@ -304,8 +298,15 @@ const estilos = {
     height: '100%',
     minHeight: '360px',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '8px',
+  },
+  sinFoto: {
+    fontSize: '13px',
+    color: 'var(--carbon-suave)',
+    letterSpacing: '0.03em',
   },
   titulo: {
     fontSize: '32px',

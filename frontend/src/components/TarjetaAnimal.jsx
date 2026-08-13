@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import { MapPin, ImageOff } from 'lucide-react';
 import { API_URL } from '../services/api';
-import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
+import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO } from '../config/catalogo';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -14,7 +14,6 @@ export default function TarjetaAnimal({ animal }) {
   const fotoSrc = animal.foto_url
     ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
     : null;
-  const emoji = EMOJI_ESPECIE[animal.especie] || '🐮';
   const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
   const esLote = animal.cantidad > 1;
 
@@ -25,13 +24,14 @@ export default function TarjetaAnimal({ animal }) {
           <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
         ) : (
           <div style={estilos.fotoPlaceholder}>
-            <span style={{ fontSize: '52px' }}>{emoji}</span>
+            <ImageOff size={30} color="var(--linea)" />
+            <span style={estilos.sinFoto}>Sin foto</span>
           </div>
         )}
         <span className={`sello ${sello.clase}`} style={estilos.selloFlotante}>
           {sello.texto}
         </span>
-        <span style={estilos.selloEspecie}>{emoji} {etiquetaEspecie}</span>
+        <span style={estilos.selloEspecie}>{etiquetaEspecie}</span>
       </div>
 
       <div style={estilos.cuerpo}>
@@ -92,8 +92,15 @@ const estilos = {
     width: '100%',
     height: '100%',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '4px',
+  },
+  sinFoto: {
+    fontSize: '11.5px',
+    color: 'var(--carbon-suave)',
+    letterSpacing: '0.03em',
   },
   selloFlotante: {
     position: 'absolute',

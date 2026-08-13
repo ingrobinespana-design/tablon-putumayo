@@ -5,8 +5,7 @@ import {
   MessageCircle, Eye, ArrowRightLeft,
 } from 'lucide-react';
 import { api, API_URL } from '../services/api';
-
-const COMISION_PCT = 5;
+import { comisionPorEspecie } from '../config/catalogo';
 
 const PESTAÑAS = [
   { valor: 'pendiente', etiqueta: 'Por revisar' },
@@ -27,8 +26,8 @@ function formatCOP(valor) {
   return '$' + Math.round(valor).toLocaleString('es-CO');
 }
 
-function calcularComision(monto) {
-  const comisionCadaParte = monto * (COMISION_PCT / 2 / 100);
+function calcularComision(monto, pct) {
+  const comisionCadaParte = monto * (pct / 2 / 100);
   const totalComprador = monto + comisionCadaParte;
   const recibeVendedor = monto - comisionCadaParte;
   const tuComision = comisionCadaParte * 2;
@@ -148,13 +147,14 @@ export default function AdminPanel() {
   }
 
   async function cerrarVenta(oferta, usarContraoferta) {
+    const pct = comisionPorEspecie(animalSeleccionado.especie);
     const montoFinal = usarContraoferta && oferta.monto_contraoferta ? oferta.monto_contraoferta : oferta.monto_ofertado;
     const confirmado = window.confirm(
-      `¿Confirmas cerrar la venta en ${formatCOP(montoFinal)}?\nSe registrará la comisión del ${COMISION_PCT}% automáticamente.`
+      `¿Confirmas cerrar la venta en ${formatCOP(montoFinal)}?\nSe registrará la comisión del ${pct}% automáticamente.`
     );
     if (!confirmado) return;
     try {
-      await api.adminCerrarVenta(clave, animalSeleccionado.id, oferta.id, COMISION_PCT, usarContraoferta);
+      await api.adminCerrarVenta(clave, animalSeleccionado.id, oferta.id, pct, usarContraoferta);
       setAnimalSeleccionado(null);
       cargarDatos();
     } catch (e) {
@@ -168,6 +168,9 @@ export default function AdminPanel() {
   }
 
   if (!clave) return null;
+
+  // Comisión según la especie del animal abierto en el modal de ofertas.
+  const pctComision = animalSeleccionado ? comisionPorEspecie(animalSeleccionado.especie) : 5;
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
@@ -331,9 +334,9 @@ export default function AdminPanel() {
             </p>
 
             <div style={estilos.notaComision}>
-              Comisión: <strong>{COMISION_PCT}%</strong> total — el comprador paga{' '}
-              <strong>{COMISION_PCT / 2}%</strong> extra y el vendedor cede <strong>{COMISION_PCT / 2}%</strong>.
-              Tú recibes el <strong>{COMISION_PCT}%</strong> completo.
+              Comisión: <strong>{pctComision}%</strong> total — el comprador paga{' '}
+              <strong>{pctComision / 2}%</strong> extra y el vendedor cede <strong>{pctComision / 2}%</strong>.
+              Tú recibes el <strong>{pctComision}%</strong> completo.
             </div>
 
             {ofertas.length === 0 && (
@@ -344,8 +347,8 @@ export default function AdminPanel() {
 
             <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {ofertas.map((oferta) => {
-                const d = calcularComision(oferta.monto_ofertado);
-                const dContra = oferta.monto_contraoferta ? calcularComision(oferta.monto_contraoferta) : null;
+                const d = calcularComision(oferta.monto_ofertado, pctComision);
+                const dContra = oferta.monto_contraoferta ? calcularComision(oferta.monto_contraoferta, pctComision) : null;
                 const tieneContraoferta = !!oferta.monto_contraoferta;
 
                 return (
@@ -368,11 +371,11 @@ export default function AdminPanel() {
                         <span style={{ fontWeight: 600 }}>{formatCOP(oferta.monto_ofertado)}</span>
                       </div>
                       <div style={{ ...estilos.desgloseOfertaFila, color: 'var(--terracota)' }}>
-                        <span>Comprador paga ({COMISION_PCT / 2}%)</span>
+                        <span>Comprador paga ({pctComision / 2}%)</span>
                         <span>+ {formatCOP(d.comisionCadaParte)}</span>
                       </div>
                       <div style={{ ...estilos.desgloseOfertaFila, color: 'var(--terracota)' }}>
-                        <span>Vendedor cede ({COMISION_PCT / 2}%)</span>
+                        <span>Vendedor cede ({pctComision / 2}%)</span>
                         <span>- {formatCOP(d.comisionCadaParte)}</span>
                       </div>
                       <div style={estilos.desgloseSeparador} />

@@ -111,7 +111,7 @@ export default function PublicarAnimal() {
             >
               {ESPECIES.map((e) => (
                 <option key={e.valor} value={e.valor}>
-                  {e.emoji} {e.label}
+                  {e.label}
                 </option>
               ))}
             </select>
