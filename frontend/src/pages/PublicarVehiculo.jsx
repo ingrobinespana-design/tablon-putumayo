@@ -6,6 +6,7 @@ import {
   VEHICULO_TIPOS, VEHICULO_TRANSMISION, VEHICULO_COMBUSTIBLE, MAX_FOTOS,
 } from '../config/catalogo';
 import { marcasDe, lineasDe, OTRA } from '../config/vehiculos_data';
+import { comprimirImagen } from '../utils/imagen';
 
 export default function PublicarVehiculo() {
   const navigate = useNavigate();
@@ -45,17 +46,29 @@ export default function PublicarVehiculo() {
     ? (form.modeloSel === OTRA ? form.modeloOtra.trim() : form.modeloSel)
     : form.modeloOtra.trim();
 
-  function agregarFotos(e) {
+  const [comprimiendo, setComprimiendo] = useState(false);
+
+  async function agregarFotos(e) {
     const nuevas = Array.from(e.target.files || []);
-    setFotos((prev) => {
-      const combinadas = [...prev];
-      for (const file of nuevas) {
-        if (combinadas.length >= MAX_FOTOS) break;
-        combinadas.push({ file, preview: URL.createObjectURL(file), pie: '' });
-      }
-      return combinadas;
-    });
     e.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!nuevas.length) return;
+    // Cuántas caben todavía
+    const cupo = MAX_FOTOS - fotos.length;
+    const aProcesar = nuevas.slice(0, Math.max(0, cupo));
+    if (!aProcesar.length) return;
+
+    setComprimiendo(true);
+    try {
+      const comprimidas = await Promise.all(
+        aProcesar.map(async (file) => {
+          const optimizada = await comprimirImagen(file);
+          return { file: optimizada, preview: URL.createObjectURL(optimizada), pie: '' };
+        })
+      );
+      setFotos((prev) => [...prev, ...comprimidas].slice(0, MAX_FOTOS));
+    } finally {
+      setComprimiendo(false);
+    }
   }
 
   function quitarFoto(i) {
@@ -258,8 +271,9 @@ export default function PublicarVehiculo() {
             {fotos.length < MAX_FOTOS && (
               <label style={estilos.agregarFoto}>
                 <Camera size={22} />
-                <span style={{ fontSize: '12.5px' }}>Agregar foto</span>
-                <input type="file" accept="image/*" multiple onChange={agregarFotos} style={{ display: 'none' }} />
+                <span style={{ fontSize: '12.5px' }}>{comprimiendo ? 'Optimizando…' : 'Agregar foto'}</span>
+                <input type="file" accept="image/*" multiple onChange={agregarFotos}
+                  disabled={comprimiendo} style={{ display: 'none' }} />
               </label>
             )}
           </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 import { ESPECIES, PROPOSITOS, PLACEHOLDER_RAZA } from '../config/catalogo';
+import { comprimirImagen } from '../utils/imagen';
 
 export default function PublicarAnimal() {
   const navigate = useNavigate();
@@ -32,11 +33,12 @@ export default function PublicarAnimal() {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
 
-  function manejarFoto(e) {
+  async function manejarFoto(e) {
     const archivo = e.target.files[0];
     if (!archivo) return;
-    setFoto(archivo);
-    setFotoPreview(URL.createObjectURL(archivo));
+    const optimizada = await comprimirImagen(archivo);
+    setFoto(optimizada);
+    setFotoPreview(URL.createObjectURL(optimizada));
   }
 
   async function manejarEnviar(e) {
