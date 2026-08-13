@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ArrowLeft, Beef } from 'lucide-react';
+import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
+import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
   en_negociacion: { texto: 'En negociación', clase: 'sello-negociacion' },
   vendido: { texto: 'Vendido', clase: 'sello-vendido' },
-};
-
-const ETIQUETAS_PROPOSITO = {
-  carne: 'Para carne',
-  genetica: 'Genética / cría',
-  leche: 'Leche',
-  doble_proposito: 'Doble propósito',
 };
 
 const COMISION_PCT = 5; // 5% total, 2.5% cada parte
@@ -100,6 +94,9 @@ export default function DetalleAnimal() {
     ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
     : null;
   const desglose = monto ? calcularComision(monto) : null;
+  const emoji = EMOJI_ESPECIE[animal.especie] || '🐮';
+  const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
+  const esLote = animal.cantidad > 1;
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
@@ -113,17 +110,30 @@ export default function DetalleAnimal() {
             <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
           ) : (
             <div style={estilos.fotoPlaceholder}>
-              <Beef size={56} color="var(--linea)" />
+              <span style={{ fontSize: '96px' }}>{emoji}</span>
             </div>
           )}
         </div>
 
         <div>
           <span className={`sello ${sello.clase}`}>{sello.texto}</span>
-          <h1 style={estilos.titulo}>{animal.raza}</h1>
-          {animal.es_criollo && <p style={estilos.criollo}>Ganado criollo / mestizo</p>}
+          <h1 style={estilos.titulo}>
+            {esLote && <span style={estilos.lote}>Lote de {animal.cantidad} · </span>}
+            {animal.raza}
+          </h1>
+          {animal.es_criollo && <p style={estilos.criollo}>Criollo / mestizo</p>}
 
           <div style={estilos.datos}>
+            <div style={estilos.dato}>
+              <span style={estilos.datoLabel}>Especie</span>
+              <span>{emoji} {etiquetaEspecie}</span>
+            </div>
+            {esLote && (
+              <div style={estilos.dato}>
+                <span style={estilos.datoLabel}>Cantidad</span>
+                <span>{animal.cantidad} animales</span>
+              </div>
+            )}
             {animal.edad_meses != null && (
               <div style={estilos.dato}>
                 <span style={estilos.datoLabel}>Edad</span>
@@ -136,10 +146,12 @@ export default function DetalleAnimal() {
                 <span>{animal.peso_kg} kg</span>
               </div>
             )}
-            <div style={estilos.dato}>
-              <span style={estilos.datoLabel}>Propósito</span>
-              <span>{ETIQUETAS_PROPOSITO[animal.proposito]}</span>
-            </div>
+            {animal.proposito && (
+              <div style={estilos.dato}>
+                <span style={estilos.datoLabel}>Propósito</span>
+                <span>{ETIQUETA_PROPOSITO[animal.proposito] || animal.proposito}</span>
+              </div>
+            )}
             {animal.zona && (
               <div style={estilos.dato}>
                 <span style={estilos.datoLabel}><MapPin size={13} /> Zona</span>
@@ -298,6 +310,10 @@ const estilos = {
   titulo: {
     fontSize: '32px',
     margin: '10px 0 4px',
+  },
+  lote: {
+    color: 'var(--terracota)',
+    fontWeight: 700,
   },
   criollo: {
     color: 'var(--carbon-suave)',

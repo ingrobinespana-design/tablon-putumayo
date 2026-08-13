@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { api } from '../services/api';
 import TarjetaAnimal from '../components/TarjetaAnimal';
+import { ESPECIES, PROPOSITOS } from '../config/catalogo';
 
 export default function Catalogo() {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [despertando, setDespertando] = useState(false);
   const [error, setError] = useState(null);
+  const [filtroEspecie, setFiltroEspecie] = useState('');
   const [filtroProposito, setFiltroProposito] = useState('');
   const [filtroZona, setFiltroZona] = useState('');
 
@@ -20,6 +22,7 @@ export default function Catalogo() {
     const avisoDespertar = setTimeout(() => setDespertando(true), 8000);
     try {
       const datos = await api.listarAnimales({
+        especie: filtroEspecie || undefined,
         proposito: filtroProposito || undefined,
         zona: filtroZona || undefined,
       });
@@ -55,15 +58,28 @@ export default function Catalogo() {
 
       <form onSubmit={manejarBuscar} style={estilos.filtros}>
         <select
+          value={filtroEspecie}
+          onChange={(e) => setFiltroEspecie(e.target.value)}
+          style={estilos.select}
+        >
+          <option value="">Todas las especies</option>
+          {ESPECIES.map((e) => (
+            <option key={e.valor} value={e.valor}>
+              {e.emoji} {e.label}
+            </option>
+          ))}
+        </select>
+        <select
           value={filtroProposito}
           onChange={(e) => setFiltroProposito(e.target.value)}
           style={estilos.select}
         >
           <option value="">Todos los propósitos</option>
-          <option value="carne">Para carne</option>
-          <option value="genetica">Genética / cría</option>
-          <option value="leche">Leche</option>
-          <option value="doble_proposito">Doble propósito</option>
+          {PROPOSITOS.map((p) => (
+            <option key={p.valor} value={p.valor}>
+              {p.label}
+            </option>
+          ))}
         </select>
         <input
           type="text"

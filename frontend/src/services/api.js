@@ -57,6 +57,7 @@ async function manejarRespuesta(res) {
 export const api = {
   listarAnimales: async (filtros = {}) => {
     const params = new URLSearchParams();
+    if (filtros.especie) params.append('especie', filtros.especie);
     if (filtros.proposito) params.append('proposito', filtros.proposito);
     if (filtros.zona) params.append('zona', filtros.zona);
     const res = await pedir(`${API_URL}/api/animales?${params.toString()}`);

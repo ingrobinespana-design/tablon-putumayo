@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from database import Base, engine, get_db
-from models import Animal, Oferta, EstadoAnimalEnum, PropositoEnum, EstadoOfertaEnum
+from models import Animal, Oferta, EstadoAnimalEnum, EspecieEnum, PropositoEnum, EstadoOfertaEnum
 from schemas import (
     AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar,
     OfertaCreate, OfertaOut, ContraofertaCreate, CerrarVentaRequest, AdminLogin,
@@ -107,6 +107,7 @@ def root():
 
 @app.get("/api/animales", response_model=List[AnimalOut])
 def listar_animales_publico(
+    especie: Optional[EspecieEnum] = None,
     proposito: Optional[PropositoEnum] = None,
     zona: Optional[str] = None,
     db: Session = Depends(get_db),
@@ -114,8 +115,10 @@ def listar_animales_publico(
     query = db.query(Animal).filter(
         Animal.estado.in_([EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion])
     )
+    if especie:
+        query = query.filter(Animal.especie == especie.value)
     if proposito:
-        query = query.filter(Animal.proposito == proposito)
+        query = query.filter(Animal.proposito == proposito.value)
     if zona:
         query = query.filter(Animal.zona.ilike(f"%{zona}%"))
     return query.order_by(Animal.creado_en.desc()).all()
@@ -132,11 +135,13 @@ def obtener_animal(animal_id: str, db: Session = Depends(get_db)):
 @app.post("/api/animales", response_model=AnimalOut, status_code=201)
 def publicar_animal(
     request: Request,
+    especie: EspecieEnum = Form(...),
     raza: str = Form(...),
     es_criollo: bool = Form(False),
+    cantidad: int = Form(1),
     edad_meses: Optional[int] = Form(None),
     peso_kg: Optional[float] = Form(None),
-    proposito: PropositoEnum = Form(PropositoEnum.carne),
+    proposito: Optional[PropositoEnum] = Form(None),
     descripcion: Optional[str] = Form(None),
     precio_piso: Optional[float] = Form(None),
     precio_esperado: Optional[float] = Form(None),
@@ -150,8 +155,10 @@ def publicar_animal(
     chequear_rate_limit(ip)
 
     datos = AnimalCreate(
+        especie=especie,
         raza=raza,
         es_criollo=es_criollo,
+        cantidad=cantidad,
         edad_meses=edad_meses,
         peso_kg=peso_kg,
         proposito=proposito,

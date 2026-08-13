@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Beef } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { API_URL } from '../services/api';
+import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -8,18 +9,14 @@ const ETIQUETAS_SELLO = {
   vendido: { texto: 'Vendido', clase: 'sello-vendido' },
 };
 
-const ETIQUETAS_PROPOSITO = {
-  carne: 'Para carne',
-  genetica: 'Genética / cría',
-  leche: 'Leche',
-  doble_proposito: 'Doble propósito',
-};
-
 export default function TarjetaAnimal({ animal }) {
   const sello = ETIQUETAS_SELLO[animal.estado] || ETIQUETAS_SELLO.disponible;
   const fotoSrc = animal.foto_url
     ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
     : null;
+  const emoji = EMOJI_ESPECIE[animal.especie] || '🐮';
+  const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
+  const esLote = animal.cantidad > 1;
 
   return (
     <Link to={`/animal/${animal.id}`} style={estilos.tarjeta}>
@@ -28,24 +25,30 @@ export default function TarjetaAnimal({ animal }) {
           <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
         ) : (
           <div style={estilos.fotoPlaceholder}>
-            <Beef size={36} color="var(--linea)" />
+            <span style={{ fontSize: '52px' }}>{emoji}</span>
           </div>
         )}
         <span className={`sello ${sello.clase}`} style={estilos.selloFlotante}>
           {sello.texto}
         </span>
+        <span style={estilos.selloEspecie}>{emoji} {etiquetaEspecie}</span>
       </div>
 
       <div style={estilos.cuerpo}>
-        <h3 style={estilos.titulo}>{animal.raza}</h3>
+        <h3 style={estilos.titulo}>
+          {esLote && <span style={estilos.lote}>Lote de {animal.cantidad} · </span>}
+          {animal.raza}
+        </h3>
         <div style={estilos.meta}>
           {animal.edad_meses != null && <span>{animal.edad_meses} meses</span>}
           {animal.peso_kg != null && <span>· {animal.peso_kg} kg</span>}
         </div>
 
-        <div style={estilos.proposito}>
-          {ETIQUETAS_PROPOSITO[animal.proposito] || animal.proposito}
-        </div>
+        {animal.proposito && (
+          <div style={estilos.proposito}>
+            {ETIQUETA_PROPOSITO[animal.proposito] || animal.proposito}
+          </div>
+        )}
 
         {animal.zona && (
           <div style={estilos.zona}>
@@ -98,12 +101,27 @@ const estilos = {
     right: '10px',
     background: 'var(--crema-card)',
   },
+  selloEspecie: {
+    position: 'absolute',
+    bottom: '10px',
+    left: '10px',
+    background: 'rgba(0, 0, 0, 0.62)',
+    color: 'white',
+    fontSize: '12px',
+    fontWeight: 600,
+    padding: '3px 9px',
+    borderRadius: '999px',
+  },
   cuerpo: {
     padding: '16px',
   },
   titulo: {
     fontSize: '19px',
     marginBottom: '4px',
+  },
+  lote: {
+    color: 'var(--terracota)',
+    fontWeight: 700,
   },
   meta: {
     fontSize: '13.5px',

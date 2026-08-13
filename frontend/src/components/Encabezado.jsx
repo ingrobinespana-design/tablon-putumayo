@@ -10,7 +10,7 @@ export default function Encabezado() {
           <span style={estilos.marcaIcono}>⛓</span>
           <div>
             <div style={estilos.marcaTexto}>Tablón Putumayo</div>
-            <div style={estilos.marcaSub}>ganado en pie, mejor precio</div>
+            <div style={estilos.marcaSub}>ganado y especies menores</div>
           </div>
         </Link>
         <nav style={estilos.nav}>

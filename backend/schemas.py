@@ -1,19 +1,25 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import re
 
-from models import PropositoEnum, EstadoAnimalEnum, EstadoOfertaEnum
+from models import EspecieEnum, PropositoEnum, EstadoAnimalEnum, EstadoOfertaEnum
 
 
 # ---------- Animal ----------
 
 class AnimalCreate(BaseModel):
+    # use_enum_values: guarda el string ("bovino") y no el objeto enum,
+    # así queda limpio en la base de datos (columna de texto).
+    model_config = ConfigDict(use_enum_values=True)
+
+    especie: EspecieEnum
     raza: str = Field(..., min_length=2, max_length=120)
     es_criollo: bool = False
-    edad_meses: Optional[int] = Field(None, ge=0, le=300)
+    cantidad: int = Field(1, ge=1, le=100000)
+    edad_meses: Optional[int] = Field(None, ge=0, le=600)
     peso_kg: Optional[float] = Field(None, ge=0, le=2000)
-    proposito: PropositoEnum = PropositoEnum.carne
+    proposito: Optional[PropositoEnum] = None
     descripcion: Optional[str] = Field(None, max_length=1000)
 
     precio_piso: Optional[float] = Field(None, ge=0)
@@ -45,11 +51,13 @@ class AnimalCreate(BaseModel):
 
 class AnimalOut(BaseModel):
     id: str
+    especie: str
     raza: str
     es_criollo: bool
+    cantidad: int
     edad_meses: Optional[int]
     peso_kg: Optional[float]
-    proposito: PropositoEnum
+    proposito: Optional[str]
     descripcion: Optional[str]
     foto_url: Optional[str]
     precio_piso: Optional[float]

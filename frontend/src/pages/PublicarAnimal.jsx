@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
+import { ESPECIES, PROPOSITOS, PLACEHOLDER_RAZA } from '../config/catalogo';
 
 export default function PublicarAnimal() {
   const navigate = useNavigate();
@@ -10,11 +11,13 @@ export default function PublicarAnimal() {
   const [publicado, setPublicado] = useState(false);
 
   const [form, setForm] = useState({
+    especie: 'bovino',
     raza: '',
     es_criollo: false,
+    cantidad: '',
     edad_meses: '',
     peso_kg: '',
-    proposito: 'carne',
+    proposito: '',
     descripcion: '',
     precio_piso: '',
     precio_esperado: '',
@@ -22,6 +25,7 @@ export default function PublicarAnimal() {
     propietario_telefono: '',
     zona: '',
   });
+  const esLote = form.especie === 'aves' || form.especie === 'porcino';
   const [foto, setFoto] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
 
@@ -43,11 +47,13 @@ export default function PublicarAnimal() {
 
     try {
       const fd = new FormData();
+      fd.append('especie', form.especie);
       fd.append('raza', form.raza);
       fd.append('es_criollo', form.es_criollo);
+      fd.append('cantidad', form.cantidad || 1);
       if (form.edad_meses) fd.append('edad_meses', form.edad_meses);
       if (form.peso_kg) fd.append('peso_kg', form.peso_kg);
-      fd.append('proposito', form.proposito);
+      if (form.proposito) fd.append('proposito', form.proposito);
       if (form.descripcion) fd.append('descripcion', form.descripcion);
       if (form.precio_piso) fd.append('precio_piso', form.precio_piso);
       if (form.precio_esperado) fd.append('precio_esperado', form.precio_esperado);
@@ -99,12 +105,27 @@ export default function PublicarAnimal() {
           <h3 style={estilos.bloqueTitulo}>Datos del animal</h3>
 
           <label style={estilos.label}>
-            Raza *
+            Especie *
+            <select
+              value={form.especie}
+              onChange={(e) => actualizar('especie', e.target.value)}
+              style={estilos.input}
+            >
+              {ESPECIES.map((e) => (
+                <option key={e.valor} value={e.valor}>
+                  {e.emoji} {e.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={estilos.label}>
+            {form.especie === 'aves' ? 'Tipo o clase *' : 'Raza o tipo *'}
             <input
               type="text"
               value={form.raza}
               onChange={(e) => actualizar('raza', e.target.value)}
-              placeholder="Ej: Brahman, Cebú, Criollo, mestizo…"
+              placeholder={PLACEHOLDER_RAZA[form.especie] || 'Raza, tipo o descripción corta'}
               required
               style={estilos.input}
             />
@@ -117,6 +138,18 @@ export default function PublicarAnimal() {
               onChange={(e) => actualizar('es_criollo', e.target.checked)}
             />
             Es criollo / mestizo (sin raza definida)
+          </label>
+
+          <label style={estilos.label}>
+            {esLote ? 'Cantidad (tamaño del lote) *' : 'Cantidad'}
+            <input
+              type="number"
+              min="1"
+              value={form.cantidad}
+              onChange={(e) => actualizar('cantidad', e.target.value)}
+              placeholder={esLote ? 'Ej: 20 gallinas, 10 lechones…' : '1'}
+              style={estilos.input}
+            />
           </label>
 
           <div style={estilos.fila}>
@@ -143,16 +176,18 @@ export default function PublicarAnimal() {
           </div>
 
           <label style={estilos.label}>
-            Propósito *
+            Propósito
             <select
               value={form.proposito}
               onChange={(e) => actualizar('proposito', e.target.value)}
               style={estilos.input}
             >
-              <option value="carne">Para carne</option>
-              <option value="genetica">Genética / cría</option>
-              <option value="leche">Leche</option>
-              <option value="doble_proposito">Doble propósito</option>
+              <option value="">Sin especificar</option>
+              {PROPOSITOS.map((p) => (
+                <option key={p.valor} value={p.valor}>
+                  {p.label}
+                </option>
+              ))}
             </select>
           </label>
 
