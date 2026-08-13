@@ -72,14 +72,18 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 _publicaciones_recientes: dict[str, list[datetime]] = {}
-LIMITE_PUBLICACIONES = 3
+# Publicación ABIERTA por defecto (sin límite). Nada sale al público hasta que
+# el admin aprueba, así que no hace falta limitar. Si algún día hay spam, se
+# puede activar un tope anti-spam con la variable de entorno LIMITE_PUBLICACIONES.
+LIMITE_PUBLICACIONES = int(os.getenv("LIMITE_PUBLICACIONES", "0"))  # 0 = sin límite
 VENTANA_HORAS = 24
 
 
 def chequear_rate_limit(ip: str):
+    if LIMITE_PUBLICACIONES <= 0:
+        return  # abierto, sin límite
     ahora = datetime.utcnow()
-    historial = _publicaciones_recientes.get(ip, [])
-    historial = [t for t in historial if ahora - t < timedelta(hours=VENTANA_HORAS)]
+    historial = [t for t in _publicaciones_recientes.get(ip, []) if ahora - t < timedelta(hours=VENTANA_HORAS)]
     if len(historial) >= LIMITE_PUBLICACIONES:
         raise HTTPException(
             status_code=429,

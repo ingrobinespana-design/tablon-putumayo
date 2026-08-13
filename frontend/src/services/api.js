@@ -3,8 +3,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // Tiempo máximo de espera por respuesta del servidor. Sin esto, si el
 // backend está dormido o caído, la interfaz se queda "cargando" para siempre.
 const TIMEOUT_MS = 15000;
-// La publicación sube fotos y en conexión rural puede tardar bastante más.
-const TIMEOUT_SUBIDA_MS = 90000;
+// La publicación sube varias fotos y en conexión rural puede tardar bastante más.
+const TIMEOUT_SUBIDA_MS = 180000;
 
 async function intentar(url, opciones, timeoutMs) {
   const controlador = new AbortController();
