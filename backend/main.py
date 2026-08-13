@@ -98,8 +98,10 @@ def verificar_admin(x_admin_clave: Optional[str] = Header(None)):
 # Endpoints públicos
 # ---------------------------------------------------------------------------
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
+    # Acepta HEAD además de GET para que los monitores gratuitos de uptime
+    # (UptimeRobot usa HEAD por defecto) reciban 200 y no un 405.
     return {"status": "ok", "service": "Ganado Putumayo API"}
 
 
