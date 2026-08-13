@@ -17,6 +17,7 @@ export default function PublicarVehiculo() {
     tipo: 'carro',
     marcaSel: '', marcaOtra: '',      // marca por lista o texto libre ("Otra")
     modeloSel: '', modeloOtra: '',    // línea por lista o texto libre
+    version: '',                      // versión / motor (ej: 1.4 TSI, XLT)
     anio: '', kilometraje: '',
     transmision: '', combustible: '', descripcion: '',
     precio_esperado: '', propietario_nombre: '', propietario_telefono: '', zona: '',
@@ -73,7 +74,8 @@ export default function PublicarVehiculo() {
       setError('Elige (o escribe) la marca y el modelo / línea.');
       return;
     }
-    const titulo = [marcaEfectiva, modeloEfectivo, form.anio].filter(Boolean).join(' ').trim();
+    const titulo = [marcaEfectiva, modeloEfectivo, form.version.trim(), form.anio]
+      .filter(Boolean).join(' ').trim();
 
     setEnviando(true);
     try {
@@ -81,6 +83,7 @@ export default function PublicarVehiculo() {
         tipo: form.tipo,
         marca: marcaEfectiva,
         modelo: modeloEfectivo,
+        version: form.version.trim() || null,
         anio: form.anio ? Number(form.anio) : null,
         kilometraje: form.kilometraje ? Number(form.kilometraje) : null,
         transmision: form.transmision || null,
@@ -181,6 +184,12 @@ export default function PublicarVehiculo() {
               )}
             </label>
           </div>
+
+          <label style={estilos.label}>
+            Versión / motor (opcional)
+            <input type="text" value={form.version} onChange={(e) => actualizar('version', e.target.value)}
+              placeholder="Ej: 1.4 TSI, XLT, Full equipo, 4x4…" maxLength={40} style={estilos.input} />
+          </label>
 
           <div style={estilos.fila}>
             <label style={estilos.label}>

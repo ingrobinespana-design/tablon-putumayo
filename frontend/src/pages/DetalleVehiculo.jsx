@@ -122,6 +122,7 @@ export default function DetalleVehiculo() {
           <p style={estilos.tipo}>🚗 {LABEL_VEHICULO_TIPO[a.tipo] || 'Vehículo'}</p>
 
           <div style={estilos.datos}>
+            {a.version && <Dato label="Versión / motor" valor={a.version} />}
             {a.anio && <Dato label="Año" valor={a.anio} />}
             {a.kilometraje != null && a.kilometraje !== '' && <Dato label="Kilometraje" valor={`${fmt(a.kilometraje)} km`} />}
             {a.transmision && <Dato label="Transmisión" valor={LABEL_TRANSMISION[a.transmision] || a.transmision} />}

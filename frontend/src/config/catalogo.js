@@ -106,13 +106,18 @@ export function desgloseComision(monto, { pct, reparto }) {
 
 // ======================= VEHÍCULOS =======================
 export const VEHICULO_TIPOS = [
-  { valor: 'carro',      label: 'Carro' },
-  { valor: 'moto',       label: 'Moto' },
-  { valor: 'camioneta',  label: 'Camioneta' },
-  { valor: 'camion',     label: 'Camión' },
-  { valor: 'bus',        label: 'Bus / buseta' },
-  { valor: 'tractor',    label: 'Tractor / maquinaria' },
-  { valor: 'otro',       label: 'Otro' },
+  { valor: 'carro',               label: 'Carro / automóvil' },
+  { valor: 'camioneta',           label: 'Camioneta / SUV' },
+  { valor: 'van',                 label: 'Van' },
+  { valor: 'moto',                label: 'Moto' },
+  { valor: 'bus',                 label: 'Bus' },
+  { valor: 'buseta',              label: 'Buseta' },
+  { valor: 'camion',              label: 'Camión' },
+  { valor: 'tractocamion',        label: 'Tractocamión / mula' },
+  { valor: 'volqueta',            label: 'Volqueta' },
+  { valor: 'tractor',             label: 'Tractor agrícola' },
+  { valor: 'maquinaria_amarilla', label: 'Maquinaria amarilla' },
+  { valor: 'otro',                label: 'Otro' },
 ];
 export const VEHICULO_TRANSMISION = [
   { valor: '',           label: 'Sin especificar' },
