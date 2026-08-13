@@ -111,7 +111,7 @@ export default function PublicarAnimal() {
             >
               {ESPECIES.map((e) => (
                 <option key={e.valor} value={e.valor}>
-                  {e.label}
+                  {e.emoji} {e.label}
                 </option>
               ))}
             </select>
@@ -323,6 +323,7 @@ const estilos = {
     fontWeight: 600,
     color: 'var(--carbon)',
     flex: 1,
+    minWidth: 0, // permite que el campo se encoja y no se salga en móvil
   },
   fila: {
     display: 'flex',
@@ -334,6 +335,7 @@ const estilos = {
     border: '1.5px solid var(--linea)',
     background: 'white',
     fontWeight: 400,
+    width: '100%', // evita que el input se desborde del contenedor en móvil
   },
   checkbox: {
     display: 'flex',

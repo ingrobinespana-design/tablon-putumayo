@@ -2,16 +2,18 @@
 // Para agregar una especie nueva en el futuro, basta con añadir una línea aquí
 // (y el mismo valor en EspecieEnum del backend). Todo lo demás se adapta solo.
 
+// Emojis de cuerpo completo (más sobrios que las "caritas") para orientar
+// visualmente cada especie sin verse caricaturescos.
 export const ESPECIES = [
-  { valor: 'bovino',   label: 'Bovinos',        singular: 'Bovino'  },
-  { valor: 'bufalino', label: 'Búfalos',        singular: 'Búfalo'  },
-  { valor: 'equino',   label: 'Caballos',       singular: 'Caballo' },
-  { valor: 'mular',    label: 'Mulas y machos', singular: 'Mular'   },
-  { valor: 'asnal',    label: 'Burros',         singular: 'Burro'   },
-  { valor: 'porcino',  label: 'Cerdos',         singular: 'Cerdo'   },
-  { valor: 'ovino',    label: 'Ovejas',         singular: 'Oveja'   },
-  { valor: 'caprino',  label: 'Cabras',         singular: 'Cabra'   },
-  { valor: 'aves',     label: 'Aves de corral', singular: 'Aves'    },
+  { valor: 'bovino',   label: 'Bovinos',        singular: 'Bovino',  emoji: '🐄' },
+  { valor: 'bufalino', label: 'Búfalos',        singular: 'Búfalo',  emoji: '🐃' },
+  { valor: 'equino',   label: 'Caballos',       singular: 'Caballo', emoji: '🐎' },
+  { valor: 'mular',    label: 'Mulas y machos', singular: 'Mular',   emoji: '🐴' },
+  { valor: 'asnal',    label: 'Burros',         singular: 'Burro',   emoji: '🫏' },
+  { valor: 'porcino',  label: 'Cerdos',         singular: 'Cerdo',   emoji: '🐖' },
+  { valor: 'ovino',    label: 'Ovejas',         singular: 'Oveja',   emoji: '🐑' },
+  { valor: 'caprino',  label: 'Cabras',         singular: 'Cabra',   emoji: '🐐' },
+  { valor: 'aves',     label: 'Aves de corral', singular: 'Aves',    emoji: '🐔' },
 ];
 
 export const PROPOSITOS = [
@@ -26,6 +28,9 @@ export const PROPOSITOS = [
 
 export const ETIQUETA_ESPECIE = Object.fromEntries(
   ESPECIES.map((e) => [e.valor, e.label])
+);
+export const EMOJI_ESPECIE = Object.fromEntries(
+  ESPECIES.map((e) => [e.valor, e.emoji])
 );
 export const ETIQUETA_PROPOSITO = Object.fromEntries(
   PROPOSITOS.map((p) => [p.valor, p.label])

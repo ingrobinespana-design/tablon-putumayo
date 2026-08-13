@@ -68,7 +68,7 @@ export default function Catalogo() {
           <option value="">Todas las especies</option>
           {ESPECIES.map((e) => (
             <option key={e.valor} value={e.valor}>
-              {e.label}
+              {e.emoji} {e.label}
             </option>
           ))}
         </select>

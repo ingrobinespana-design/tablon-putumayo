@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ArrowLeft, ImageOff } from 'lucide-react';
+import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
-import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, comisionPorEspecie } from '../config/catalogo';
+import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE, comisionPorEspecie } from '../config/catalogo';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -93,6 +93,7 @@ export default function DetalleAnimal() {
     : null;
   const comisionPct = comisionPorEspecie(animal.especie);
   const desglose = monto ? calcularComision(monto, comisionPct) : null;
+  const emoji = EMOJI_ESPECIE[animal.especie] || '🐄';
   const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
   const esLote = animal.cantidad > 1;
 
@@ -108,7 +109,7 @@ export default function DetalleAnimal() {
             <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
           ) : (
             <div style={estilos.fotoPlaceholder}>
-              <ImageOff size={54} color="var(--linea)" />
+              <span style={{ fontSize: '90px' }}>{emoji}</span>
               <span style={estilos.sinFoto}>Sin foto</span>
             </div>
           )}
@@ -125,7 +126,7 @@ export default function DetalleAnimal() {
           <div style={estilos.datos}>
             <div style={estilos.dato}>
               <span style={estilos.datoLabel}>Especie</span>
-              <span>{etiquetaEspecie}</span>
+              <span>{emoji} {etiquetaEspecie}</span>
             </div>
             {esLote && (
               <div style={estilos.dato}>
