@@ -51,25 +51,60 @@ class AnimalCreate(BaseModel):
 
 class AnimalOut(BaseModel):
     id: str
-    especie: str
-    raza: str
-    es_criollo: bool
-    cantidad: int
-    edad_meses: Optional[int]
-    peso_kg: Optional[float]
-    proposito: Optional[str]
-    descripcion: Optional[str]
-    foto_url: Optional[str]
-    precio_piso: Optional[float]
-    precio_esperado: Optional[float]
+    categoria: str
+    titulo: Optional[str] = None
+    atributos: Optional[dict] = None
+    # Campos de animales (nulos en otras categorías)
+    especie: Optional[str] = None
+    raza: Optional[str] = None
+    es_criollo: bool = False
+    cantidad: int = 1
+    edad_meses: Optional[int] = None
+    peso_kg: Optional[float] = None
+    proposito: Optional[str] = None
+    # Compartidos
+    descripcion: Optional[str] = None
+    foto_url: Optional[str] = None
+    fotos: Optional[list] = None
+    precio_piso: Optional[float] = None
+    precio_esperado: Optional[float] = None
     propietario_nombre: str
     propietario_telefono: str
-    zona: Optional[str]
+    zona: Optional[str] = None
     estado: EstadoAnimalEnum
     creado_en: datetime
 
     class Config:
         from_attributes = True
+
+
+class PublicacionCreate(BaseModel):
+    """Crear una publicación de categoría no-animal (vehículos, inmuebles…)."""
+    categoria: str = Field(..., min_length=2, max_length=20)
+    titulo: str = Field(..., min_length=3, max_length=150)
+    atributos: dict = Field(default_factory=dict)
+    descripcion: Optional[str] = Field(None, max_length=1000)
+    precio_esperado: Optional[float] = Field(None, ge=0)
+    propietario_nombre: str = Field(..., min_length=3, max_length=150)
+    propietario_telefono: str = Field(..., min_length=7, max_length=30)
+    zona: Optional[str] = Field(None, max_length=150)
+
+    @field_validator("propietario_telefono")
+    @classmethod
+    def validar_telefono(cls, v: str) -> str:
+        if len(re.sub(r"\D", "", v)) < 7:
+            raise ValueError("Número de teléfono inválido")
+        return v
+
+    @field_validator("titulo", "propietario_nombre", "descripcion")
+    @classmethod
+    def sin_links_ni_basura(cls, v):
+        if v is None:
+            return v
+        bloqueados = ["http://", "https://", "www.", "<script"]
+        if any(b in v.lower() for b in bloqueados):
+            raise ValueError("El texto contiene contenido no permitido")
+        return v.strip()
 
 
 class AnimalAdminOut(AnimalOut):

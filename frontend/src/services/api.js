@@ -87,6 +87,38 @@ export const api = {
     return manejarRespuesta(res);
   },
 
+  // ---------- Publicaciones genéricas (vehículos, inmuebles…) ----------
+  listarPublicaciones: async (categoria, filtros = {}) => {
+    const params = new URLSearchParams();
+    if (categoria) params.append('categoria', categoria);
+    if (filtros.zona) params.append('zona', filtros.zona);
+    const res = await pedir(`${API_URL}/api/publicaciones?${params.toString()}`);
+    return manejarRespuesta(res);
+  },
+
+  obtenerPublicacion: async (id) => {
+    const res = await pedir(`${API_URL}/api/publicaciones/${id}`);
+    return manejarRespuesta(res);
+  },
+
+  publicarPublicacion: async (formData) => {
+    const res = await pedir(
+      `${API_URL}/api/publicaciones`,
+      { method: 'POST', body: formData },
+      TIMEOUT_SUBIDA_MS
+    );
+    return manejarRespuesta(res);
+  },
+
+  registrarOfertaPublicacion: async (pubId, datos) => {
+    const res = await pedir(`${API_URL}/api/publicaciones/${pubId}/ofertas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    return manejarRespuesta(res);
+  },
+
   // ---------- Admin ----------
   adminLogin: async (clave) => {
     const res = await pedir(`${API_URL}/api/admin/login`, {

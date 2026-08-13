@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import (
     Column, String, Integer, Float, DateTime, Enum as SAEnum, ForeignKey, Text, Boolean
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -54,22 +54,33 @@ class EstadoOfertaEnum(str, enum.Enum):
 
 
 class Animal(Base):
+    # La tabla sigue llamándose "animales" por historia, pero ahora guarda
+    # publicaciones de CUALQUIER categoría (animales, vehículos, inmuebles…).
     __tablename__ = "animales"
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
 
+    # Categoría de la publicación. 'animales' usa los campos específicos de
+    # abajo; las demás categorías usan `titulo` + `atributos` (JSON flexible).
+    categoria = Column(String(20), nullable=False, default="animales")
+    titulo = Column(String(150), nullable=True)     # título para no-animales
+    atributos = Column(JSONB, nullable=True)        # campos propios de cada categoría
+
+    # --- Campos específicos de animales (nullable: solo aplican a esa categoría) ---
     # especie y proposito se guardan como texto (no como ENUM de Postgres) para
     # poder agregar nuevas especies/propósitos en el futuro sin migrar la base.
-    # La validación de valores permitidos se hace en los esquemas (Pydantic).
-    especie = Column(String(20), nullable=False, default=EspecieEnum.bovino.value)
-    raza = Column(String(120), nullable=False)
+    especie = Column(String(20), nullable=True)
+    raza = Column(String(120), nullable=True)
     es_criollo = Column(Boolean, default=False)
     cantidad = Column(Integer, nullable=False, default=1)  # tamaño del lote (aves, lechones…)
     edad_meses = Column(Integer, nullable=True)
     peso_kg = Column(Float, nullable=True)
     proposito = Column(String(30), nullable=True)
+
+    # --- Campos compartidos por todas las categorías ---
     descripcion = Column(Text, nullable=True)
-    foto_url = Column(String(500), nullable=True)
+    foto_url = Column(String(500), nullable=True)     # foto principal (miniatura)
+    fotos = Column(JSONB, nullable=True)              # galería: [{url, pie}, …] (vehículos/inmuebles)
 
     precio_piso = Column(Float, nullable=True)
     precio_esperado = Column(Float, nullable=True)

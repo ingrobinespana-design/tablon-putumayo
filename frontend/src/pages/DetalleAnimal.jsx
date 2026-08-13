@@ -80,7 +80,7 @@ export default function DetalleAnimal() {
     return (
       <div className="contenedor" style={{ padding: '40px 20px' }}>
         <p style={{ color: 'var(--rojo-alerta)' }}>{error}</p>
-        <Link to="/" className="btn btn-secundario" style={{ marginTop: '16px' }}>
+        <Link to="/animales" className="btn btn-secundario" style={{ marginTop: '16px' }}>
           <ArrowLeft size={16} /> Volver al catálogo
         </Link>
       </div>
@@ -99,7 +99,7 @@ export default function DetalleAnimal() {
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
-      <Link to="/" style={estilos.volver}>
+      <Link to="/animales" style={estilos.volver}>
         <ArrowLeft size={16} /> Volver al catálogo
       </Link>
 

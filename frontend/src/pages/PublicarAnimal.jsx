@@ -80,7 +80,7 @@ export default function PublicarAnimal() {
             para que los compradores puedan verla y contactarte. Esto evita que
             entren publicaciones falsas o de prueba al catálogo público.
           </p>
-          <button className="btn btn-primario" onClick={() => navigate('/')}>
+          <button className="btn btn-primario" onClick={() => navigate('/animales')}>
             Volver al catálogo
           </button>
         </div>

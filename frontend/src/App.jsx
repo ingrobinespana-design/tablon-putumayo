@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Encabezado from './components/Encabezado';
+import Inicio from './pages/Inicio';
 import Catalogo from './pages/Catalogo';
 import DetalleAnimal from './pages/DetalleAnimal';
 import PublicarAnimal from './pages/PublicarAnimal';
+import CatalogoVehiculos from './pages/CatalogoVehiculos';
+import DetalleVehiculo from './pages/DetalleVehiculo';
+import PublicarVehiculo from './pages/PublicarVehiculo';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 
@@ -25,9 +29,18 @@ function RutasConEncabezado() {
           <>
             <Encabezado />
             <Routes>
-              <Route path="/" element={<Catalogo />} />
+              <Route path="/" element={<Inicio />} />
+              <Route path="/publicar" element={<Inicio modo="publicar" />} />
+
+              {/* Animales */}
+              <Route path="/animales" element={<Catalogo />} />
               <Route path="/animal/:id" element={<DetalleAnimal />} />
-              <Route path="/publicar" element={<PublicarAnimal />} />
+              <Route path="/publicar/animales" element={<PublicarAnimal />} />
+
+              {/* Vehículos */}
+              <Route path="/vehiculos" element={<CatalogoVehiculos />} />
+              <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
+              <Route path="/publicar/vehiculos" element={<PublicarVehiculo />} />
             </Routes>
           </>
         }

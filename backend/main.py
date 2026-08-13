@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import uuid
 import requests
@@ -16,7 +17,7 @@ from sqlalchemy import func
 from database import Base, engine, get_db
 from models import Animal, Oferta, EstadoAnimalEnum, EspecieEnum, PropositoEnum, EstadoOfertaEnum
 from schemas import (
-    AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar,
+    AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar, PublicacionCreate,
     OfertaCreate, OfertaOut, ContraofertaCreate, CerrarVentaRequest, AdminLogin,
 )
 
@@ -94,6 +95,30 @@ def verificar_admin(x_admin_clave: Optional[str] = Header(None)):
     return True
 
 
+def _subir_foto(foto: Optional[UploadFile]) -> Optional[str]:
+    """Sube la foto a Cloudinary (o al disco local si no está configurado) y
+    devuelve su URL. Compartido por todas las categorías de publicación."""
+    if not foto or not foto.filename:
+        return None
+    ext = os.path.splitext(foto.filename)[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+        raise HTTPException(status_code=400, detail="Formato de imagen no permitido")
+    if CLOUDINARY_CONFIGURADO:
+        try:
+            resultado = cloudinary.uploader.upload(
+                foto.file, upload_preset="tablon_putumayo", unsigned=True, resource_type="image",
+            )
+            return resultado["secure_url"]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error subiendo la imagen: {e}")
+    # Respaldo local si Cloudinary no está configurado (no persiste entre despliegues)
+    nombre_archivo = f"{uuid.uuid4()}{ext}"
+    ruta = os.path.join(UPLOAD_DIR, nombre_archivo)
+    with open(ruta, "wb") as f:
+        shutil.copyfileobj(foto.file, f)
+    return f"/uploads/{nombre_archivo}"
+
+
 # ---------------------------------------------------------------------------
 # Endpoints públicos
 # ---------------------------------------------------------------------------
@@ -113,7 +138,8 @@ def listar_animales_publico(
     db: Session = Depends(get_db),
 ):
     query = db.query(Animal).filter(
-        Animal.estado.in_([EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion])
+        Animal.categoria == "animales",
+        Animal.estado.in_([EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion]),
     )
     if especie:
         query = query.filter(Animal.especie == especie.value)
@@ -122,6 +148,110 @@ def listar_animales_publico(
     if zona:
         query = query.filter(Animal.zona.ilike(f"%{zona}%"))
     return query.order_by(Animal.creado_en.desc()).all()
+
+
+# ---------------------------------------------------------------------------
+# Publicaciones genéricas (vehículos, inmuebles, electrodomésticos…)
+# Reusan la misma tabla y el mismo flujo de ofertas/comisión que los animales.
+# ---------------------------------------------------------------------------
+
+@app.get("/api/publicaciones", response_model=List[AnimalOut])
+def listar_publicaciones(
+    categoria: Optional[str] = None,
+    zona: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(Animal).filter(
+        Animal.estado.in_([EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion])
+    )
+    if categoria:
+        query = query.filter(Animal.categoria == categoria)
+    if zona:
+        query = query.filter(Animal.zona.ilike(f"%{zona}%"))
+    return query.order_by(Animal.creado_en.desc()).all()
+
+
+@app.get("/api/publicaciones/{pub_id}", response_model=AnimalOut)
+def obtener_publicacion(pub_id: str, db: Session = Depends(get_db)):
+    pub = db.query(Animal).filter(Animal.id == pub_id).first()
+    if not pub or pub.estado not in (
+        EstadoAnimalEnum.disponible, EstadoAnimalEnum.en_negociacion, EstadoAnimalEnum.vendido
+    ):
+        raise HTTPException(status_code=404, detail="Publicación no encontrada")
+    return pub
+
+
+MAX_FOTOS = 10
+
+
+@app.post("/api/publicaciones", response_model=AnimalOut, status_code=201)
+def crear_publicacion(
+    request: Request,
+    categoria: str = Form(...),
+    titulo: str = Form(...),
+    atributos: Optional[str] = Form(None),   # JSON serializado con los campos de la categoría
+    descripcion: Optional[str] = Form(None),
+    precio_esperado: Optional[float] = Form(None),
+    propietario_nombre: str = Form(...),
+    propietario_telefono: str = Form(...),
+    zona: Optional[str] = Form(None),
+    pies: Optional[str] = Form(None),        # JSON: lista de pies de foto alineada con las fotos
+    fotos: List[UploadFile] = File(default=[]),
+    db: Session = Depends(get_db),
+):
+    ip = request.client.host if request.client else "unknown"
+    chequear_rate_limit(ip)
+
+    attrs = {}
+    if atributos:
+        try:
+            attrs = json.loads(atributos)
+            if not isinstance(attrs, dict):
+                raise ValueError
+        except Exception:
+            raise HTTPException(status_code=400, detail="Atributos inválidos")
+
+    lista_pies = []
+    if pies:
+        try:
+            lista_pies = json.loads(pies)
+        except Exception:
+            lista_pies = []
+
+    datos = PublicacionCreate(
+        categoria=categoria,
+        titulo=titulo,
+        atributos=attrs,
+        descripcion=descripcion,
+        precio_esperado=precio_esperado,
+        propietario_nombre=propietario_nombre,
+        propietario_telefono=propietario_telefono,
+        zona=zona,
+    )
+
+    # Galería de fotos (cada una con su pie opcional)
+    galeria = []
+    for i, f in enumerate(fotos[:MAX_FOTOS]):
+        if f and f.filename:
+            url = _subir_foto(f)
+            if url:
+                pie = lista_pies[i] if i < len(lista_pies) else None
+                galeria.append({"url": url, "pie": (pie or None)})
+
+    foto_principal = galeria[0]["url"] if galeria else None
+
+    nuevo = Animal(
+        **datos.model_dump(),
+        foto_url=foto_principal,
+        fotos=(galeria or None),
+        estado=EstadoAnimalEnum.pendiente,
+    )
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+
+    notificar_publicacion_nueva(nuevo.titulo, nuevo.propietario_nombre, nuevo.zona)
+    return nuevo
 
 
 @app.get("/api/animales/{animal_id}", response_model=AnimalOut)
@@ -170,33 +300,11 @@ def publicar_animal(
         zona=zona,
     )
 
-    foto_url = None
-    if foto and foto.filename:
-        ext = os.path.splitext(foto.filename)[1].lower()
-        if ext not in (".jpg", ".jpeg", ".png", ".webp"):
-            raise HTTPException(status_code=400, detail="Formato de imagen no permitido")
-
-        if CLOUDINARY_CONFIGURADO:
-            try:
-                resultado = cloudinary.uploader.upload(
-                    foto.file,
-                    upload_preset="tablon_putumayo",
-                    unsigned=True,
-                    resource_type="image",
-                )
-                foto_url = resultado["secure_url"]
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error subiendo la imagen: {e}")
-        else:
-            # Respaldo local si Cloudinary no está configurado (no persiste entre despliegues)
-            nombre_archivo = f"{uuid.uuid4()}{ext}"
-            ruta = os.path.join(UPLOAD_DIR, nombre_archivo)
-            with open(ruta, "wb") as f:
-                shutil.copyfileobj(foto.file, f)
-            foto_url = f"/uploads/{nombre_archivo}"
+    foto_url = _subir_foto(foto)
 
     nuevo = Animal(
         **datos.model_dump(),
+        categoria="animales",
         foto_url=foto_url,
         estado=EstadoAnimalEnum.pendiente,
     )
@@ -224,6 +332,12 @@ def registrar_oferta(animal_id: str, oferta: OfertaCreate, db: Session = Depends
     db.commit()
     db.refresh(nueva_oferta)
     return nueva_oferta
+
+
+@app.post("/api/publicaciones/{pub_id}/ofertas", response_model=OfertaOut, status_code=201)
+def registrar_oferta_publicacion(pub_id: str, oferta: OfertaCreate, db: Session = Depends(get_db)):
+    # Mismo flujo de ofertas para cualquier categoría (reusa la lógica de animales).
+    return registrar_oferta(pub_id, oferta, db)
 
 
 # ---------------------------------------------------------------------------

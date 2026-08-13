@@ -21,16 +21,16 @@ export default function Encabezado() {
               ...(location.pathname === '/' ? estilos.linkActivo : {}),
             }}
           >
-            Catálogo
+            Inicio
           </Link>
           <Link
             to="/publicar"
             style={{
               ...estilos.link,
-              ...(location.pathname === '/publicar' ? estilos.linkActivo : {}),
+              ...(location.pathname.startsWith('/publicar') ? estilos.linkActivo : {}),
             }}
           >
-            Publicar animal
+            Publicar
           </Link>
         </nav>
       </div>

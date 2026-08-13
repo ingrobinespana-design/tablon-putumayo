@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, Plus } from 'lucide-react';
 import { api } from '../services/api';
 import TarjetaAnimal from '../components/TarjetaAnimal';
 import { ESPECIES, PROPOSITOS } from '../config/catalogo';
@@ -52,7 +53,12 @@ export default function Catalogo() {
   return (
     <div className="contenedor" style={{ padding: '32px 20px 60px' }}>
       <div style={estilos.hero}>
-        <h1 style={estilos.heroTitulo}>Animales disponibles</h1>
+        <div style={estilos.heroFila}>
+          <h1 style={estilos.heroTitulo}>Animales disponibles</h1>
+          <Link to="/publicar/animales" className="btn btn-primario">
+            <Plus size={16} /> Publicar animal
+          </Link>
+        </div>
         <p style={estilos.heroTexto}>
           Cada animal aquí fue revisado antes de publicarse. Si te interesa uno,
           escribe directo por WhatsApp al propietario.
@@ -139,7 +145,14 @@ export default function Catalogo() {
 const estilos = {
   hero: {
     marginBottom: '28px',
-    maxWidth: '640px',
+  },
+  heroFila: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+    marginBottom: '10px',
   },
   heroTitulo: {
     fontSize: 'clamp(28px, 4vw, 38px)',

@@ -5,7 +5,7 @@ import {
   MessageCircle, Eye, ArrowRightLeft,
 } from 'lucide-react';
 import { api, API_URL } from '../services/api';
-import { comisionPorEspecie } from '../config/catalogo';
+import { comisionDe, LABEL_CATEGORIA, EMOJI_CATEGORIA } from '../config/catalogo';
 
 const PESTAÑAS = [
   { valor: 'pendiente', etiqueta: 'Por revisar' },
@@ -24,6 +24,16 @@ const ETIQUETAS_PROPOSITO = {
 function formatCOP(valor) {
   if (valor == null) return '—';
   return '$' + Math.round(valor).toLocaleString('es-CO');
+}
+
+// Nombre a mostrar de una publicación (animales usan raza; el resto, título).
+function nombrePub(p) {
+  return p.titulo || p.raza || 'Publicación';
+}
+
+function etiquetaCategoria(p) {
+  const cat = p.categoria || 'animales';
+  return `${EMOJI_CATEGORIA[cat] || ''} ${LABEL_CATEGORIA[cat] || cat}`.trim();
 }
 
 function calcularComision(monto, pct) {
@@ -147,7 +157,7 @@ export default function AdminPanel() {
   }
 
   async function cerrarVenta(oferta, usarContraoferta) {
-    const pct = comisionPorEspecie(animalSeleccionado.especie);
+    const pct = comisionDe(animalSeleccionado).pct;
     const montoFinal = usarContraoferta && oferta.monto_contraoferta ? oferta.monto_contraoferta : oferta.monto_ofertado;
     const confirmado = window.confirm(
       `¿Confirmas cerrar la venta en ${formatCOP(montoFinal)}?\nSe registrará la comisión del ${pct}% automáticamente.`
@@ -170,7 +180,7 @@ export default function AdminPanel() {
   if (!clave) return null;
 
   // Comisión según la especie del animal abierto en el modal de ofertas.
-  const pctComision = animalSeleccionado ? comisionPorEspecie(animalSeleccionado.especie) : 5;
+  const pctComision = animalSeleccionado ? comisionDe(animalSeleccionado).pct : 5;
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
@@ -219,7 +229,7 @@ export default function AdminPanel() {
             {animal.foto_url ? (
               <img
                 src={animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`}
-                alt={animal.raza}
+                alt={nombrePub(animal)}
                 style={estilos.foto}
               />
             ) : (
@@ -227,7 +237,10 @@ export default function AdminPanel() {
             )}
 
             <div style={estilos.info}>
-              <strong>{animal.raza}</strong>
+              <strong>{nombrePub(animal)}</strong>
+              <span style={{ ...estilos.infoSub, color: 'var(--terracota)', fontWeight: 600 }}>
+                {etiquetaCategoria(animal)}
+              </span>
               <span style={estilos.infoSub}>
                 {animal.propietario_nombre} · {animal.propietario_telefono}
                 {animal.zona ? ` · ${animal.zona}` : ''}
@@ -269,24 +282,35 @@ export default function AdminPanel() {
                     ? animalDetalle.foto_url
                     : `${API_URL}${animalDetalle.foto_url}`
                 }
-                alt={animalDetalle.raza}
+                alt={nombrePub(animalDetalle)}
                 style={estilos.fotoGrande}
               />
             ) : (
               <div style={{ ...estilos.fotoGrande, background: '#EDE6D3' }} />
             )}
 
-            <h3 style={{ marginTop: '16px', marginBottom: '2px' }}>{animalDetalle.raza}</h3>
+            <span style={{ ...estilos.infoSub, color: 'var(--terracota)', fontWeight: 600, display: 'block', marginTop: '12px' }}>
+              {etiquetaCategoria(animalDetalle)}
+            </span>
+            <h3 style={{ marginTop: '2px', marginBottom: '2px' }}>{nombrePub(animalDetalle)}</h3>
             {animalDetalle.es_criollo && (
-              <p style={estilos.infoSub}>Ganado criollo / mestizo</p>
+              <p style={estilos.infoSub}>Criollo / mestizo</p>
             )}
 
             <div style={estilos.detalleGrid}>
-              <DetalleItem label="Edad" valor={animalDetalle.edad_meses ? `${animalDetalle.edad_meses} meses` : '—'} />
-              <DetalleItem label="Peso aprox." valor={animalDetalle.peso_kg ? `${animalDetalle.peso_kg} kg` : '—'} />
-              <DetalleItem label="Propósito" valor={ETIQUETAS_PROPOSITO[animalDetalle.proposito] || animalDetalle.proposito} />
+              {(animalDetalle.categoria || 'animales') === 'animales' ? (
+                <>
+                  <DetalleItem label="Especie" valor={animalDetalle.especie || '—'} />
+                  <DetalleItem label="Edad" valor={animalDetalle.edad_meses ? `${animalDetalle.edad_meses} meses` : '—'} />
+                  <DetalleItem label="Peso aprox." valor={animalDetalle.peso_kg ? `${animalDetalle.peso_kg} kg` : '—'} />
+                  <DetalleItem label="Propósito" valor={ETIQUETAS_PROPOSITO[animalDetalle.proposito] || animalDetalle.proposito || '—'} />
+                </>
+              ) : (
+                Object.entries(animalDetalle.atributos || {})
+                  .filter(([, v]) => v != null && v !== '')
+                  .map(([k, v]) => <DetalleItem key={k} label={k} valor={String(v)} />)
+              )}
               <DetalleItem label="Zona" valor={animalDetalle.zona || '—'} />
-              <DetalleItem label="Precio piso (pesa)" valor={formatCOP(animalDetalle.precio_piso)} />
               <DetalleItem label="Precio esperado" valor={formatCOP(animalDetalle.precio_esperado)} />
             </div>
 
@@ -328,7 +352,7 @@ export default function AdminPanel() {
       {animalSeleccionado && (
         <div style={estilos.modalFondo} onClick={() => setAnimalSeleccionado(null)}>
           <div style={estilos.modal} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginBottom: '2px' }}>Ofertas — {animalSeleccionado.raza}</h3>
+            <h3 style={{ marginBottom: '2px' }}>Ofertas — {nombrePub(animalSeleccionado)}</h3>
             <p style={estilos.infoSub}>
               {animalSeleccionado.zona} · Espera: {formatCOP(animalSeleccionado.precio_esperado)}
             </p>
@@ -450,7 +474,7 @@ export default function AdminPanel() {
                           href={linkWhatsApp(
                             oferta.comprador_telefono,
                             tieneContraoferta
-                              ? `Hola ${oferta.comprador_nombre}, el vendedor propone ${formatCOP(oferta.monto_contraoferta)} por el animal. ¿Te sirve?`
+                              ? `Hola ${oferta.comprador_nombre}, el vendedor propone ${formatCOP(oferta.monto_contraoferta)} por ${nombrePub(animalSeleccionado)}. ¿Te sirve?`
                               : `Hola ${oferta.comprador_nombre}, vi tu oferta de ${formatCOP(oferta.monto_ofertado)}. Hablemos para coordinar.`
                           )}
                           target="_blank"
