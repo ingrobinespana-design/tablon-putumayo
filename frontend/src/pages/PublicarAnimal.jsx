@@ -19,7 +19,6 @@ export default function PublicarAnimal() {
     peso_kg: '',
     proposito: '',
     descripcion: '',
-    precio_piso: '',
     precio_esperado: '',
     propietario_nombre: '',
     propietario_telefono: '',
@@ -55,7 +54,6 @@ export default function PublicarAnimal() {
       if (form.peso_kg) fd.append('peso_kg', form.peso_kg);
       if (form.proposito) fd.append('proposito', form.proposito);
       if (form.descripcion) fd.append('descripcion', form.descripcion);
-      if (form.precio_piso) fd.append('precio_piso', form.precio_piso);
       if (form.precio_esperado) fd.append('precio_esperado', form.precio_esperado);
       fd.append('propietario_nombre', form.propietario_nombre);
       fd.append('propietario_telefono', form.propietario_telefono);
@@ -214,29 +212,17 @@ export default function PublicarAnimal() {
 
         <div style={estilos.bloque}>
           <h3 style={estilos.bloqueTitulo}>Precio</h3>
-          <div style={estilos.fila}>
-            <label style={estilos.label}>
-              Precio que daría la pesa local
-              <input
-                type="number"
-                min="0"
-                value={form.precio_piso}
-                onChange={(e) => actualizar('precio_piso', e.target.value)}
-                placeholder="Opcional, para comparar"
-                style={estilos.input}
-              />
-            </label>
-            <label style={estilos.label}>
-              Precio que esperas
-              <input
-                type="number"
-                min="0"
-                value={form.precio_esperado}
-                onChange={(e) => actualizar('precio_esperado', e.target.value)}
-                style={estilos.input}
-              />
-            </label>
-          </div>
+          <label style={estilos.label}>
+            Precio que esperas
+            <input
+              type="number"
+              min="0"
+              value={form.precio_esperado}
+              onChange={(e) => actualizar('precio_esperado', e.target.value)}
+              placeholder="Los compradores pueden ofertar y contraofertar sobre este valor"
+              style={estilos.input}
+            />
+          </label>
         </div>
 
         <div style={estilos.bloque}>
