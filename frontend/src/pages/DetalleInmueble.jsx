@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
-import {
-  LABEL_VEHICULO_TIPO, comisionDe, desgloseComision,
-} from '../config/catalogo';
+import { LABEL_INMUEBLE_TIPO, LABEL_UNIDAD, comisionDe, desgloseComision } from '../config/catalogo';
 import BotonCompartir from '../components/BotonCompartir';
 
 const ETIQUETAS_SELLO = {
@@ -13,14 +11,11 @@ const ETIQUETAS_SELLO = {
   vendido: { texto: 'Vendido', clase: 'sello-vendido' },
 };
 
-const LABEL_TRANSMISION = { mecanica: 'Mecánica', automatica: 'Automática' };
-const LABEL_COMBUSTIBLE = { gasolina: 'Gasolina', diesel: 'Diésel', gas: 'Gas', electrico: 'Eléctrico / híbrido' };
-
 function fmtCOP(v) { return '$' + Math.round(v).toLocaleString('es-CO'); }
 function fmt(v) { return Number(v).toLocaleString('es-CO'); }
 function urlFoto(u) { return u.startsWith('http') ? u : `${API_URL}${u}`; }
 
-export default function DetalleVehiculo() {
+export default function DetalleInmueble() {
   const { id } = useParams();
   const [pub, setPub] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -37,7 +32,7 @@ export default function DetalleVehiculo() {
   useEffect(() => {
     api.obtenerPublicacion(id)
       .then(setPub)
-      .catch(() => setError('No encontramos este vehículo. Puede que ya se haya vendido o el enlace esté mal.'))
+      .catch(() => setError('No encontramos este inmueble. Puede que ya se haya vendido o el enlace esté mal.'))
       .finally(() => setCargando(false));
   }, [id]);
 
@@ -72,8 +67,8 @@ export default function DetalleVehiculo() {
     return (
       <div className="contenedor" style={{ padding: '40px 20px' }}>
         <p style={{ color: 'var(--rojo-alerta)' }}>{error}</p>
-        <Link to="/vehiculos" className="btn btn-secundario" style={{ marginTop: '16px' }}>
-          <ArrowLeft size={16} /> Volver a vehículos
+        <Link to="/inmuebles" className="btn btn-secundario" style={{ marginTop: '16px' }}>
+          <ArrowLeft size={16} /> Volver a inmuebles
         </Link>
       </div>
     );
@@ -91,16 +86,15 @@ export default function DetalleVehiculo() {
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
-      <Link to="/vehiculos" style={estilos.volver}><ArrowLeft size={16} /> Volver a vehículos</Link>
+      <Link to="/inmuebles" style={estilos.volver}><ArrowLeft size={16} /> Volver a inmuebles</Link>
 
       <div className="detalle-layout">
-        {/* Galería */}
         <div>
           <div style={estilos.fotoPrincipalWrap}>
             {activa ? (
               <img src={urlFoto(activa.url)} alt={pub.titulo} style={estilos.fotoPrincipal} />
             ) : (
-              <div style={estilos.sinFoto}><span style={{ fontSize: '90px' }}>🚗</span></div>
+              <div style={estilos.sinFoto}><span style={{ fontSize: '90px' }}>🏠</span></div>
             )}
           </div>
           {activa && activa.pie && <p style={estilos.pie}>{activa.pie}</p>}
@@ -116,18 +110,15 @@ export default function DetalleVehiculo() {
           )}
         </div>
 
-        {/* Info */}
         <div>
           <span className={`sello ${sello.clase}`}>{sello.texto}</span>
           <h1 style={estilos.titulo}>{pub.titulo}</h1>
-          <p style={estilos.tipo}>🚗 {LABEL_VEHICULO_TIPO[a.tipo] || 'Vehículo'}</p>
+          <p style={estilos.tipo}>🏠 {LABEL_INMUEBLE_TIPO[a.tipo] || 'Inmueble'}</p>
 
           <div style={estilos.datos}>
-            {a.version && <Dato label="Versión / motor" valor={a.version} />}
-            {a.anio && <Dato label="Año" valor={a.anio} />}
-            {a.kilometraje != null && a.kilometraje !== '' && <Dato label="Kilometraje" valor={`${fmt(a.kilometraje)} km`} />}
-            {a.transmision && <Dato label="Transmisión" valor={LABEL_TRANSMISION[a.transmision] || a.transmision} />}
-            {a.combustible && <Dato label="Combustible" valor={LABEL_COMBUSTIBLE[a.combustible] || a.combustible} />}
+            {a.area && <Dato label="Área" valor={`${fmt(a.area)} ${LABEL_UNIDAD[a.unidad] || a.unidad}`} />}
+            {a.habitaciones != null && a.habitaciones !== '' && <Dato label="Habitaciones" valor={a.habitaciones} />}
+            {a.banos != null && a.banos !== '' && <Dato label="Baños" valor={a.banos} />}
             {pub.zona && <Dato label={<><MapPin size={13} /> Zona</>} valor={pub.zona} />}
           </div>
 
@@ -146,7 +137,7 @@ export default function DetalleVehiculo() {
                 style={{ flex: 1, padding: '14px' }}>
                 <MessageCircle size={18} /> Contactar
               </a>
-              <BotonCompartir titulo={pub.titulo} precio={pub.precio_esperado} ruta={`/vehiculo/${pub.id}`} estilo={{ flex: 1, padding: '14px' }} />
+              <BotonCompartir titulo={pub.titulo} precio={pub.precio_esperado} ruta={`/inmueble/${pub.id}`} estilo={{ flex: 1, padding: '14px' }} />
             </div>
           )}
 
@@ -156,9 +147,7 @@ export default function DetalleVehiculo() {
               <p style={estilos.ofertaTexto}>
                 Ayuda al vendedor a comparar ofertas. Si tu oferta es aceptada, se aplica una comisión
                 del <strong>{comision.pct}%</strong>{' '}
-                {comision.reparto === 'vendedor'
-                  ? '(la asume el vendedor).'
-                  : `dividida en partes iguales (${comision.pct / 2}% cada uno).`}
+                {comision.reparto === 'vendedor' ? '(la asume el vendedor).' : `dividida en partes iguales (${comision.pct / 2}% cada uno).`}
               </p>
 
               {enviado ? (

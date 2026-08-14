@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE, comisionPorEspecie } from '../config/catalogo';
+import BotonCompartir from '../components/BotonCompartir';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -170,15 +171,18 @@ export default function DetalleAnimal() {
           )}
 
           {animal.estado !== 'vendido' && (
-            <a
-              href={linkWhatsApp()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-whatsapp"
-              style={{ width: '100%', marginTop: '20px', padding: '14px' }}
-            >
-              <MessageCircle size={18} /> Contactar por WhatsApp
-            </a>
+            <div style={estilos.botones}>
+              <a
+                href={linkWhatsApp()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp"
+                style={{ flex: 1, padding: '14px' }}
+              >
+                <MessageCircle size={18} /> Contactar
+              </a>
+              <BotonCompartir titulo={animal.raza} precio={animal.precio_esperado} ruta={`/animal/${animal.id}`} estilo={{ flex: 1, padding: '14px' }} />
+            </div>
           )}
 
           {animal.estado !== 'vendido' && (
@@ -362,6 +366,7 @@ const estilos = {
     fontSize: '15px',
     border: '1px solid var(--dorado)',
   },
+  botones: { display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' },
   ofertaBox: {
     marginTop: '28px',
     paddingTop: '22px',

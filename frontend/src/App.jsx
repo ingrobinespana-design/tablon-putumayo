@@ -7,6 +7,9 @@ import PublicarAnimal from './pages/PublicarAnimal';
 import CatalogoVehiculos from './pages/CatalogoVehiculos';
 import DetalleVehiculo from './pages/DetalleVehiculo';
 import PublicarVehiculo from './pages/PublicarVehiculo';
+import CatalogoInmuebles from './pages/CatalogoInmuebles';
+import DetalleInmueble from './pages/DetalleInmueble';
+import PublicarInmueble from './pages/PublicarInmueble';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 
@@ -41,6 +44,11 @@ function RutasConEncabezado() {
               <Route path="/vehiculos" element={<CatalogoVehiculos />} />
               <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
               <Route path="/publicar/vehiculos" element={<PublicarVehiculo />} />
+
+              {/* Inmuebles */}
+              <Route path="/inmuebles" element={<CatalogoInmuebles />} />
+              <Route path="/inmueble/:id" element={<DetalleInmueble />} />
+              <Route path="/publicar/inmuebles" element={<PublicarInmueble />} />
             </Routes>
           </>
         }

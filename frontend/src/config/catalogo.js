@@ -66,8 +66,8 @@ export const CATEGORIAS = [
     desc: 'Ganado y especies menores' },
   { valor: 'vehiculos',        label: 'Vehículos',        emoji: '🚗', activa: true,
     desc: 'Carros, motos, camionetas, tractores' },
-  { valor: 'inmuebles',        label: 'Inmuebles',        emoji: '🏠', activa: false,
-    desc: 'Casas, fincas, lotes (próximamente)' },
+  { valor: 'inmuebles',        label: 'Inmuebles',        emoji: '🏠', activa: true,
+    desc: 'Casas, fincas, lotes y locales' },
   { valor: 'electrodomesticos', label: 'Electrodomésticos', emoji: '📺', activa: false,
     desc: 'Neveras, estufas, lavadoras, TVs (próximamente)' },
 ];
@@ -132,5 +132,23 @@ export const VEHICULO_COMBUSTIBLE = [
   { valor: 'electrico',  label: 'Eléctrico / híbrido' },
 ];
 export const LABEL_VEHICULO_TIPO = Object.fromEntries(VEHICULO_TIPOS.map((t) => [t.valor, t.label]));
+
+// ======================= INMUEBLES =======================
+export const INMUEBLE_TIPOS = [
+  { valor: 'casa',        label: 'Casa' },
+  { valor: 'apartamento', label: 'Apartamento' },
+  { valor: 'finca',       label: 'Finca' },
+  { valor: 'lote',        label: 'Lote / terreno' },
+  { valor: 'local',       label: 'Local comercial' },
+  { valor: 'bodega',      label: 'Bodega' },
+  { valor: 'otro',        label: 'Otro' },
+];
+export const UNIDADES_AREA = [
+  { valor: 'm2',        label: 'm²' },
+  { valor: 'hectareas', label: 'hectáreas' },
+  { valor: 'fanegadas', label: 'fanegadas' },
+];
+export const LABEL_INMUEBLE_TIPO = Object.fromEntries(INMUEBLE_TIPOS.map((t) => [t.valor, t.label]));
+export const LABEL_UNIDAD = Object.fromEntries(UNIDADES_AREA.map((u) => [u.valor, u.label]));
 
 export const MAX_FOTOS = 10;
