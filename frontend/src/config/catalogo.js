@@ -95,8 +95,8 @@ export const LABEL_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.valor
 export const COMISION_CATEGORIA = {
   vehiculos: { pct: 5, reparto: 'ambos' },
   inmuebles: { pct: 5, reparto: 'vendedor' },
-  electrodomesticos: { pct: 2, reparto: 'ambos' },
-  varios: { pct: 2.5, reparto: 'vendedor' }, // 2,5% que asume el vendedor
+  electrodomesticos: { pct: 2, reparto: 'vendedor' }, // 2% que asume el vendedor
+  varios: { pct: 2, reparto: 'vendedor' },            // 2% que asume el vendedor
 };
 
 // Comisión aplicable a una publicación (animales usa su regla por especie).
