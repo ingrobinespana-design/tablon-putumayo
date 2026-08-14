@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { API_URL } from '../services/api';
 import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
+import SelloDestacado from './SelloDestacado';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -21,6 +22,7 @@ export default function TarjetaAnimal({ animal }) {
   return (
     <Link to={`/animal/${animal.id}`} style={estilos.tarjeta}>
       <div style={estilos.fotoContenedor}>
+        {animal.destacado && <SelloDestacado />}
         {fotoSrc ? (
           <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
         ) : (

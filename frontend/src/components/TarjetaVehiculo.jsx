@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Camera } from 'lucide-react';
 import { API_URL } from '../services/api';
 import { LABEL_VEHICULO_TIPO } from '../config/catalogo';
+import SelloDestacado from './SelloDestacado';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -25,6 +26,7 @@ export default function TarjetaVehiculo({ pub }) {
   return (
     <Link to={`/vehiculo/${pub.id}`} style={estilos.tarjeta}>
       <div style={estilos.fotoContenedor}>
+        {pub.destacado && <SelloDestacado />}
         {fotoSrc ? (
           <img src={fotoSrc} alt={pub.titulo} style={estilos.foto} />
         ) : (

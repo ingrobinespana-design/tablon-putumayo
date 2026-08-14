@@ -66,6 +66,7 @@ class AnimalOut(BaseModel):
     descripcion: Optional[str] = None
     foto_url: Optional[str] = None
     fotos: Optional[list] = None
+    destacado: bool = False
     precio_piso: Optional[float] = None
     precio_esperado: Optional[float] = None
     propietario_nombre: str

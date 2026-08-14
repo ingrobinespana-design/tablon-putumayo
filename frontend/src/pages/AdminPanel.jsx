@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle, XCircle, LogOut, TrendingUp, Clock, Package, DollarSign,
-  MessageCircle, Eye, ArrowRightLeft,
+  MessageCircle, Eye, ArrowRightLeft, Star,
 } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 import { comisionDe, LABEL_CATEGORIA, EMOJI_CATEGORIA } from '../config/catalogo';
@@ -116,6 +116,15 @@ export default function AdminPanel() {
     try {
       await api.adminRechazar(clave, id, motivo);
       setAnimalDetalle(null);
+      cargarDatos();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function alternarDestacado(animal) {
+    try {
+      await api.adminDestacar(clave, animal.id);
       cargarDatos();
     } catch (e) {
       setError(e.message);
@@ -265,6 +274,13 @@ export default function AdminPanel() {
               {(pestaña === 'disponible' || pestaña === 'en_negociacion') && (
                 <button onClick={() => verOfertas(animal)} className="btn btn-secundario" style={estilos.btnPequeño}>
                   Ver ofertas
+                </button>
+              )}
+              {(pestaña === 'disponible' || pestaña === 'en_negociacion') && (
+                <button onClick={() => alternarDestacado(animal)} className="btn btn-secundario"
+                  style={{ ...estilos.btnPequeño, ...(animal.destacado ? { borderColor: 'var(--dorado)', color: 'var(--dorado)' } : {}) }}>
+                  <Star size={14} fill={animal.destacado ? 'currentColor' : 'none'} />
+                  {animal.destacado ? 'Quitar destacado' : 'Destacar'}
                 </button>
               )}
             </div>

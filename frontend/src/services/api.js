@@ -164,6 +164,14 @@ export const api = {
     return manejarRespuesta(res);
   },
 
+  adminDestacar: async (clave, animalId) => {
+    const res = await pedir(`${API_URL}/api/admin/animales/${animalId}/destacar`, {
+      method: 'POST',
+      headers: { 'X-Admin-Clave': clave },
+    });
+    return manejarRespuesta(res);
+  },
+
   adminAprobar: async (clave, animalId) => {
     const res = await pedir(`${API_URL}/api/admin/animales/${animalId}/aprobar`, {
       method: 'POST',

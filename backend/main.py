@@ -170,7 +170,7 @@ def listar_animales_publico(
         query = query.filter(Animal.proposito == proposito.value)
     if zona:
         query = query.filter(Animal.zona.ilike(f"%{zona}%"))
-    return query.order_by(Animal.creado_en.desc()).all()
+    return query.order_by(Animal.destacado.desc(), Animal.creado_en.desc()).all()
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +191,7 @@ def listar_publicaciones(
         query = query.filter(Animal.categoria == categoria)
     if zona:
         query = query.filter(Animal.zona.ilike(f"%{zona}%"))
-    return query.order_by(Animal.creado_en.desc()).all()
+    return query.order_by(Animal.destacado.desc(), Animal.creado_en.desc()).all()
 
 
 @app.get("/api/publicaciones/{pub_id}", response_model=AnimalOut)
@@ -398,6 +398,17 @@ def obtener_animal_admin(animal_id: str, db: Session = Depends(get_db), _=Depend
     animal = db.query(Animal).filter(Animal.id == animal_id).first()
     if not animal:
         raise HTTPException(status_code=404, detail="No encontrado")
+    return animal
+
+
+@app.post("/api/admin/animales/{animal_id}/destacar", response_model=AnimalAdminOut)
+def destacar_animal(animal_id: str, db: Session = Depends(get_db), _=Depends(verificar_admin)):
+    animal = db.query(Animal).filter(Animal.id == animal_id).first()
+    if not animal:
+        raise HTTPException(status_code=404, detail="No encontrado")
+    animal.destacado = not animal.destacado
+    db.commit()
+    db.refresh(animal)
     return animal
 
 
