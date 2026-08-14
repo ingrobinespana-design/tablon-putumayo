@@ -220,7 +220,7 @@ const estilos = {
   datos: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '18px 0', padding: '16px', background: 'var(--crema-card)', borderRadius: 'var(--radius)', border: '1px solid var(--linea)' },
   dato: { display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '15px' },
   datoLabel: { fontSize: '12px', color: 'var(--carbon-suave)', textTransform: 'uppercase', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '4px' },
-  descripcion: { color: 'var(--carbon)', lineHeight: 1.6, marginBottom: '16px' },
+  descripcion: { color: 'var(--carbon)', lineHeight: 1.6, marginBottom: '16px', whiteSpace: 'pre-wrap', textAlign: 'justify' },
   precioBox: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(201, 162, 75, 0.12)', borderRadius: 'var(--radius)', fontSize: '15px', border: '1px solid var(--dorado)' },
   botones: { display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' },
   ofertaBox: { marginTop: '28px', paddingTop: '22px', borderTop: '1px solid var(--linea)' },

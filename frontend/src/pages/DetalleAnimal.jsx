@@ -354,6 +354,8 @@ const estilos = {
     color: 'var(--carbon)',
     lineHeight: 1.6,
     marginBottom: '16px',
+    whiteSpace: 'pre-wrap',
+    textAlign: 'justify',
   },
   precioBox: {
     display: 'flex',
