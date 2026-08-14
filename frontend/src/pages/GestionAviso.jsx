@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { CheckCircle2, Copy, PartyPopper } from 'lucide-react';
 import { api } from '../services/api';
 import { comisionDe, comisionVendedorPaga, NEQUI } from '../config/catalogo';
+import CampoPrecio from '../components/CampoPrecio';
 
 function fmtCOP(v) { return '$' + Math.round(v).toLocaleString('es-CO'); }
 
@@ -90,8 +91,8 @@ export default function GestionAviso() {
           <form onSubmit={reportar} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <label style={estilos.label}>
               ¿En cuánto lo vendiste? (COP)
-              <input type="number" min="0" value={monto} onChange={(e) => setMonto(e.target.value)}
-                placeholder="Ej: 3500000" required autoFocus style={estilos.input} />
+              <CampoPrecio value={monto} onChange={setMonto}
+                placeholder="Ej: 3.500.000" required autoFocus style={estilos.input} />
             </label>
             {parseFloat(monto) > 0 && (
               <div style={estilos.avisoComision}>

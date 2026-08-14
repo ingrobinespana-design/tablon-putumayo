@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { MAX_FOTOS, VARIOS_GRUPOS } from '../config/catalogo';
 import { comprimirImagen } from '../utils/imagen';
 import EnlaceGestion from '../components/EnlaceGestion';
+import CampoPrecio from '../components/CampoPrecio';
 
 export default function PublicarVarios() {
   const navigate = useNavigate();
@@ -146,8 +147,8 @@ export default function PublicarVarios() {
           <h3 style={estilos.bloqueTitulo}>Precio</h3>
           <label style={estilos.label}>
             Precio que esperas
-            <input type="number" min="0" value={form.precio_esperado}
-              onChange={(e) => actualizar('precio_esperado', e.target.value)}
+            <CampoPrecio value={form.precio_esperado}
+              onChange={(v) => actualizar('precio_esperado', v)}
               placeholder="Los compradores pueden ofertar sobre este valor" style={estilos.input} />
           </label>
         </div>

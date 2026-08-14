@@ -4,6 +4,7 @@ import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 import { LABEL_INMUEBLE_TIPO, LABEL_UNIDAD, comisionDe, desgloseComision } from '../config/catalogo';
 import BotonCompartir from '../components/BotonCompartir';
+import CampoPrecio from '../components/CampoPrecio';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -161,7 +162,7 @@ export default function DetalleInmueble() {
                 <form onSubmit={enviarOferta} style={estilos.form}>
                   <input type="text" placeholder="Tu nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required style={estilos.input} />
                   <input type="tel" placeholder="Tu teléfono / WhatsApp" value={telefono} onChange={(e) => setTelefono(e.target.value)} style={estilos.input} />
-                  <input type="number" placeholder="Monto que ofreces (COP)" value={monto} onChange={(e) => setMonto(e.target.value)} required min="0" style={estilos.input} />
+                  <CampoPrecio placeholder="Monto que ofreces (COP)" value={monto} onChange={setMonto} required style={estilos.input} />
 
                   {d && parseFloat(monto) > 0 && (
                     <div style={estilos.desgloseBox}>

@@ -4,6 +4,7 @@ import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE, comisionPorEspecie } from '../config/catalogo';
 import BotonCompartir from '../components/BotonCompartir';
+import CampoPrecio from '../components/CampoPrecio';
 
 const ETIQUETAS_SELLO = {
   disponible: { texto: 'Disponible', clase: 'sello-disponible' },
@@ -221,13 +222,11 @@ export default function DetalleAnimal() {
                     onChange={(e) => setTelefono(e.target.value)}
                     style={estilos.input}
                   />
-                  <input
-                    type="number"
+                  <CampoPrecio
                     placeholder="Monto que ofreces (COP)"
                     value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
+                    onChange={setMonto}
                     required
-                    min="0"
                     style={estilos.input}
                   />
 

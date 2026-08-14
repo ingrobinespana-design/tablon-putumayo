@@ -8,6 +8,7 @@ import {
 import { marcasDe, lineasDe, OTRA } from '../config/vehiculos_data';
 import { comprimirImagen } from '../utils/imagen';
 import EnlaceGestion from '../components/EnlaceGestion';
+import CampoPrecio from '../components/CampoPrecio';
 
 export default function PublicarVehiculo() {
   const navigate = useNavigate();
@@ -291,9 +292,9 @@ export default function PublicarVehiculo() {
           <h3 style={estilos.bloqueTitulo}>Precio</h3>
           <label style={estilos.label}>
             Precio que esperas
-            <input type="number" min="0" value={form.precio_esperado}
-              onChange={(e) => actualizar('precio_esperado', e.target.value)}
-              placeholder="Los compradores pueden ofertar y contraofertar sobre este valor" style={estilos.input} />
+            <CampoPrecio value={form.precio_esperado}
+              onChange={(v) => actualizar('precio_esperado', v)}
+              placeholder="Los compradores pueden ofertar sobre este valor" style={estilos.input} />
           </label>
         </div>
 
