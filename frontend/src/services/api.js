@@ -139,6 +139,21 @@ export const api = {
     return manejarRespuesta(res);
   },
 
+  // ---------- Gestión del vendedor (enlace privado) ----------
+  obtenerGestion: async (token) => {
+    const res = await pedir(`${API_URL}/api/gestionar/${token}`);
+    return manejarRespuesta(res);
+  },
+
+  reportarVendido: async (token, montoFinal) => {
+    const res = await pedir(`${API_URL}/api/gestionar/${token}/vendido`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto_final: montoFinal }),
+    });
+    return manejarRespuesta(res);
+  },
+
   // ---------- Admin ----------
   adminLogin: async (clave) => {
     const res = await pedir(`${API_URL}/api/admin/login`, {

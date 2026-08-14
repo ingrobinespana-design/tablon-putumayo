@@ -107,6 +107,17 @@ export function comisionDe(pub) {
   return COMISION_CATEGORIA[pub.categoria] || { pct: 0, reparto: 'ambos' };
 }
 
+// Datos para el cobro de la comisión.
+export const NEQUI = '3156009728';
+
+// Cuánto le paga el vendedor a la plataforma por la comisión de su venta.
+// reparto 'vendedor' → paga el % completo; 'ambos' → paga su mitad.
+export function comisionVendedorPaga(pub, monto) {
+  const { pct, reparto } = comisionDe(pub);
+  const efectivo = reparto === 'vendedor' ? pct : pct / 2;
+  return (parseFloat(monto) || 0) * (efectivo / 100);
+}
+
 // Desglose de la comisión sobre un monto, según pct y reparto.
 export function desgloseComision(monto, { pct, reparto }) {
   const m = parseFloat(monto) || 0;

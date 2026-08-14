@@ -18,6 +18,7 @@ from database import Base, engine, get_db
 from models import Animal, Oferta, EstadoAnimalEnum, EspecieEnum, PropositoEnum, EstadoOfertaEnum
 from schemas import (
     AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar, PublicacionCreate,
+    PublicacionCreada, ReportarVendido,
     OfertaCreate, OfertaOut, ContraofertaCreate, CerrarVentaRequest, AdminLogin,
 )
 
@@ -204,10 +205,46 @@ def obtener_publicacion(pub_id: str, db: Session = Depends(get_db)):
     return pub
 
 
+# ---------------------------------------------------------------------------
+# Gestión del vendedor (por enlace privado con token, sin cuenta)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/gestionar/{token}", response_model=AnimalAdminOut)
+def obtener_gestion(token: str, db: Session = Depends(get_db)):
+    pub = db.query(Animal).filter(Animal.token_gestion == token).first()
+    if not pub:
+        raise HTTPException(status_code=404, detail="Enlace no válido")
+    return pub
+
+
+@app.post("/api/gestionar/{token}/vendido", response_model=AnimalAdminOut)
+def reportar_vendido(token: str, datos: ReportarVendido, db: Session = Depends(get_db)):
+    pub = db.query(Animal).filter(Animal.token_gestion == token).first()
+    if not pub:
+        raise HTTPException(status_code=404, detail="Enlace no válido")
+    if pub.estado == EstadoAnimalEnum.vendido:
+        raise HTTPException(status_code=400, detail="Este aviso ya está marcado como vendido")
+
+    pub.estado = EstadoAnimalEnum.vendido
+    pub.vendido_en = datetime.utcnow()
+    pub.monto_venta = datos.monto_final
+    db.commit()
+    db.refresh(pub)
+
+    nombre = pub.titulo or pub.raza or "publicación"
+    monto_txt = "${:,.0f}".format(datos.monto_final).replace(",", ".")
+    enviar_telegram(
+        f"✅ VENTA reportada por el vendedor\n\nAviso: {nombre}\nMonto: {monto_txt}\n"
+        f"Propietario: {pub.propietario_nombre} ({pub.propietario_telefono})\n\n"
+        f"Revisa que la comisión haya sido pagada."
+    )
+    return pub
+
+
 MAX_FOTOS = 10
 
 
-@app.post("/api/publicaciones", response_model=AnimalOut, status_code=201)
+@app.post("/api/publicaciones", response_model=PublicacionCreada, status_code=201)
 def crear_publicacion(
     request: Request,
     categoria: str = Form(...),
@@ -285,7 +322,7 @@ def obtener_animal(animal_id: str, db: Session = Depends(get_db)):
     return animal
 
 
-@app.post("/api/animales", response_model=AnimalOut, status_code=201)
+@app.post("/api/animales", response_model=PublicacionCreada, status_code=201)
 def publicar_animal(
     request: Request,
     especie: EspecieEnum = Form(...),

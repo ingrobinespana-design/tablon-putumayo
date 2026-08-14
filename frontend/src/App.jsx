@@ -16,6 +16,7 @@ import PublicarElectro from './pages/PublicarElectro';
 import CatalogoVarios from './pages/CatalogoVarios';
 import DetalleVarios from './pages/DetalleVarios';
 import PublicarVarios from './pages/PublicarVarios';
+import GestionAviso from './pages/GestionAviso';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 
@@ -65,6 +66,9 @@ function RutasConEncabezado() {
               <Route path="/varios" element={<CatalogoVarios />} />
               <Route path="/articulo/:id" element={<DetalleVarios />} />
               <Route path="/publicar/varios" element={<PublicarVarios />} />
+
+              {/* Gestión del vendedor (enlace privado) */}
+              <Route path="/gestionar/:token" element={<GestionAviso />} />
             </Routes>
           </>
         }

@@ -4,12 +4,14 @@ import { Camera, CheckCircle2, X } from 'lucide-react';
 import { api } from '../services/api';
 import { INMUEBLE_TIPOS, UNIDADES_AREA, LABEL_INMUEBLE_TIPO, LABEL_UNIDAD, MAX_FOTOS } from '../config/catalogo';
 import { comprimirImagen } from '../utils/imagen';
+import EnlaceGestion from '../components/EnlaceGestion';
 
 export default function PublicarInmueble() {
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
   const [publicado, setPublicado] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [form, setForm] = useState({
     tipo: 'casa', area: '', unidad: 'm2', habitaciones: '', banos: '',
@@ -79,7 +81,8 @@ export default function PublicarInmueble() {
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
 
-      await api.publicarPublicacion(fd);
+      const creado = await api.publicarPublicacion(fd);
+      setToken(creado.token_gestion);
       setPublicado(true);
     } catch (e) {
       setError(e.message || 'No pudimos publicar el inmueble. Intenta de nuevo.');
@@ -98,6 +101,7 @@ export default function PublicarInmueble() {
             Lo revisamos pronto y, en cuanto se apruebe, aparecerá en el catálogo
             de inmuebles para que los compradores puedan verlo y contactarte.
           </p>
+          <EnlaceGestion token={token} />
           <button className="btn btn-primario" onClick={() => navigate('/inmuebles')}>
             Ver catálogo de inmuebles
           </button>

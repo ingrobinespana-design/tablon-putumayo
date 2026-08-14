@@ -4,12 +4,14 @@ import { Camera, CheckCircle2, X } from 'lucide-react';
 import { api } from '../services/api';
 import { MAX_FOTOS, VARIOS_GRUPOS } from '../config/catalogo';
 import { comprimirImagen } from '../utils/imagen';
+import EnlaceGestion from '../components/EnlaceGestion';
 
 export default function PublicarVarios() {
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
   const [publicado, setPublicado] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [form, setForm] = useState({
     titulo: '', grupo: 'otro', descripcion: '',
@@ -58,7 +60,8 @@ export default function PublicarVarios() {
       if (form.zona) fd.append('zona', form.zona);
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
-      await api.publicarPublicacion(fd);
+      const creado = await api.publicarPublicacion(fd);
+      setToken(creado.token_gestion);
       setPublicado(true);
     } catch (e) {
       setError(e.message || 'No pudimos publicar. Intenta de nuevo.');
@@ -72,6 +75,7 @@ export default function PublicarVarios() {
           <CheckCircle2 size={48} color="var(--verde-exito)" />
           <h2 style={{ marginTop: '16px' }}>Tu aviso quedó en revisión</h2>
           <p style={estilos.exitoTexto}>Lo revisamos pronto y, en cuanto se apruebe, aparecerá en el catálogo.</p>
+          <EnlaceGestion token={token} />
           <button className="btn btn-primario" onClick={() => navigate('/varios')}>Ver catálogo</button>
         </div>
       </div>

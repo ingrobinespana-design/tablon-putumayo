@@ -377,7 +377,10 @@ export default function AdminPanel() {
             <a
               href={linkWhatsApp(
                 animalSeleccionado.propietario_telefono,
-                `Hola ${animalSeleccionado.propietario_nombre}, tu aviso "${nombrePub(animalSeleccionado)}" en Vende Putumayo tiene ofertas. ¿Ya lo vendiste o sigue disponible? Cuéntame para cerrarlo. ¡Gracias!`
+                `Hola ${animalSeleccionado.propietario_nombre}, tu aviso "${nombrePub(animalSeleccionado)}" en Vende Putumayo tiene ofertas. ¿Ya lo vendiste o sigue disponible?` +
+                (animalSeleccionado.token_gestion
+                  ? ` Si ya vendiste, repórtalo aquí: ${window.location.origin}/gestionar/${animalSeleccionado.token_gestion}`
+                  : ' Cuéntame para cerrarlo.') + ' ¡Gracias!'
               )}
               target="_blank"
               rel="noopener noreferrer"

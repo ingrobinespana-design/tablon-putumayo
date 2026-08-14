@@ -4,12 +4,14 @@ import { Camera, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 import { ESPECIES, PROPOSITOS, PLACEHOLDER_RAZA } from '../config/catalogo';
 import { comprimirImagen } from '../utils/imagen';
+import EnlaceGestion from '../components/EnlaceGestion';
 
 export default function PublicarAnimal() {
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
   const [publicado, setPublicado] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [form, setForm] = useState({
     especie: 'bovino',
@@ -62,7 +64,8 @@ export default function PublicarAnimal() {
       if (form.zona) fd.append('zona', form.zona);
       if (foto) fd.append('foto', foto);
 
-      await api.publicarAnimal(fd);
+      const creado = await api.publicarAnimal(fd);
+      setToken(creado.token_gestion);
       setPublicado(true);
     } catch (e) {
       setError(e.message || 'No pudimos publicar el animal. Intenta de nuevo.');
@@ -82,6 +85,7 @@ export default function PublicarAnimal() {
             para que los compradores puedan verla y contactarte. Esto evita que
             entren publicaciones falsas o de prueba al catálogo público.
           </p>
+          <EnlaceGestion token={token} />
           <button className="btn btn-primario" onClick={() => navigate('/animales')}>
             Volver al catálogo
           </button>

@@ -112,6 +112,17 @@ class AnimalAdminOut(AnimalOut):
     motivo_rechazo: Optional[str]
     aprobado_en: Optional[datetime]
     vendido_en: Optional[datetime]
+    monto_venta: Optional[float] = None
+    token_gestion: Optional[str] = None  # para armar el enlace de gestión del vendedor
+
+
+class PublicacionCreada(AnimalOut):
+    # Se devuelve SOLO al crear, para darle al vendedor su enlace privado.
+    token_gestion: Optional[str] = None
+
+
+class ReportarVendido(BaseModel):
+    monto_final: float = Field(..., gt=0)
 
 
 class AnimalRechazar(BaseModel):

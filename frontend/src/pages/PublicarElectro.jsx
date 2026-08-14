@@ -7,12 +7,14 @@ import {
   ELECTRO_TIPOS, ELECTRO_ESTADOS, LABEL_ELECTRO_TIPO, CAP_ELECTRO_TIPO, marcasElectroDe, OTRA,
 } from '../config/electro_data';
 import { comprimirImagen } from '../utils/imagen';
+import EnlaceGestion from '../components/EnlaceGestion';
 
 export default function PublicarElectro() {
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
   const [publicado, setPublicado] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [form, setForm] = useState({
     tipo: 'televisor', marcaSel: '', marcaOtra: '', referencia: '', capacidad: '',
@@ -76,7 +78,8 @@ export default function PublicarElectro() {
       if (form.zona) fd.append('zona', form.zona);
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
-      await api.publicarPublicacion(fd);
+      const creado = await api.publicarPublicacion(fd);
+      setToken(creado.token_gestion);
       setPublicado(true);
     } catch (e) {
       setError(e.message || 'No pudimos publicar. Intenta de nuevo.');
@@ -92,6 +95,7 @@ export default function PublicarElectro() {
           <p style={estilos.exitoTexto}>
             Lo revisamos pronto y, en cuanto se apruebe, aparecerá en el catálogo.
           </p>
+          <EnlaceGestion token={token} />
           <button className="btn btn-primario" onClick={() => navigate('/electrodomesticos')}>
             Ver catálogo
           </button>

@@ -7,12 +7,14 @@ import {
 } from '../config/catalogo';
 import { marcasDe, lineasDe, OTRA } from '../config/vehiculos_data';
 import { comprimirImagen } from '../utils/imagen';
+import EnlaceGestion from '../components/EnlaceGestion';
 
 export default function PublicarVehiculo() {
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState(null);
   const [publicado, setPublicado] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [form, setForm] = useState({
     tipo: 'carro',
@@ -115,7 +117,8 @@ export default function PublicarVehiculo() {
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
 
-      await api.publicarPublicacion(fd);
+      const creado = await api.publicarPublicacion(fd);
+      setToken(creado.token_gestion);
       setPublicado(true);
     } catch (e) {
       setError(e.message || 'No pudimos publicar el vehículo. Intenta de nuevo.');
@@ -134,6 +137,7 @@ export default function PublicarVehiculo() {
             Lo revisamos pronto y, en cuanto se apruebe, aparecerá en el catálogo
             de vehículos para que los compradores puedan verlo y contactarte.
           </p>
+          <EnlaceGestion token={token} />
           <button className="btn btn-primario" onClick={() => navigate('/vehiculos')}>
             Ver catálogo de vehículos
           </button>

@@ -82,6 +82,8 @@ class Animal(Base):
     foto_url = Column(String(500), nullable=True)     # foto principal (miniatura)
     fotos = Column(JSONB, nullable=True)              # galería: [{url, pie}, …] (vehículos/inmuebles)
     destacado = Column(Boolean, nullable=False, default=False)  # aparece de primero (pago)
+    token_gestion = Column(String(40), nullable=True, default=gen_uuid, index=True)  # enlace privado del vendedor
+    monto_venta = Column(Float, nullable=True)  # monto final reportado por el vendedor
 
     precio_piso = Column(Float, nullable=True)
     precio_esperado = Column(Float, nullable=True)
