@@ -10,6 +10,9 @@ import PublicarVehiculo from './pages/PublicarVehiculo';
 import CatalogoInmuebles from './pages/CatalogoInmuebles';
 import DetalleInmueble from './pages/DetalleInmueble';
 import PublicarInmueble from './pages/PublicarInmueble';
+import CatalogoElectro from './pages/CatalogoElectro';
+import DetalleElectro from './pages/DetalleElectro';
+import PublicarElectro from './pages/PublicarElectro';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 
@@ -49,6 +52,11 @@ function RutasConEncabezado() {
               <Route path="/inmuebles" element={<CatalogoInmuebles />} />
               <Route path="/inmueble/:id" element={<DetalleInmueble />} />
               <Route path="/publicar/inmuebles" element={<PublicarInmueble />} />
+
+              {/* Electrodomésticos */}
+              <Route path="/electrodomesticos" element={<CatalogoElectro />} />
+              <Route path="/electrodomestico/:id" element={<DetalleElectro />} />
+              <Route path="/publicar/electrodomesticos" element={<PublicarElectro />} />
             </Routes>
           </>
         }

@@ -68,8 +68,8 @@ export const CATEGORIAS = [
     desc: 'Carros, motos, camionetas, tractores' },
   { valor: 'inmuebles',        label: 'Inmuebles',        emoji: '🏠', activa: true,
     desc: 'Casas, fincas, lotes y locales' },
-  { valor: 'electrodomesticos', label: 'Electrodomésticos', emoji: '📺', activa: false,
-    desc: 'Neveras, estufas, lavadoras, TVs (próximamente)' },
+  { valor: 'electrodomesticos', label: 'Electrodomésticos', emoji: '📺', activa: true,
+    desc: 'Neveras, TVs, lavadoras, celulares y más' },
 ];
 export const EMOJI_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.valor, c.emoji]));
 export const LABEL_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.valor, c.label]));
