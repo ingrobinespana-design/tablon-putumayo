@@ -154,6 +154,15 @@ export const api = {
     return manejarRespuesta(res);
   },
 
+  editarAviso: async (token, datos) => {
+    const res = await pedir(`${API_URL}/api/gestionar/${token}/editar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    return manejarRespuesta(res);
+  },
+
   // ---------- Admin ----------
   adminLogin: async (clave) => {
     const res = await pedir(`${API_URL}/api/admin/login`, {

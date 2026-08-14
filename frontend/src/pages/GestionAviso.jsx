@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle2, Copy, PartyPopper } from 'lucide-react';
+import { CheckCircle2, Copy, PartyPopper, Pencil } from 'lucide-react';
 import { api } from '../services/api';
 import { comisionDe, comisionVendedorPaga, NEQUI } from '../config/catalogo';
 import CampoPrecio from '../components/CampoPrecio';
@@ -13,10 +13,11 @@ export default function GestionAviso() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
-  const [modo, setModo] = useState('ver');   // ver | reportar
+  const [modo, setModo] = useState('ver');   // ver | reportar | editar
   const [monto, setMonto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [edit, setEdit] = useState({ titulo: '', descripcion: '', precio_esperado: '', zona: '' });
 
   useEffect(() => {
     api.obtenerGestion(token)
@@ -32,6 +33,38 @@ export default function GestionAviso() {
     setError(null);
     try {
       const actualizado = await api.reportarVendido(token, parseFloat(monto));
+      setPub(actualizado);
+      setModo('ver');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  function abrirEditar() {
+    setEdit({
+      titulo: pub.titulo || pub.raza || '',
+      descripcion: pub.descripcion || '',
+      precio_esperado: pub.precio_esperado ? String(Math.round(pub.precio_esperado)) : '',
+      zona: pub.zona || '',
+    });
+    setError(null);
+    setModo('editar');
+  }
+
+  async function guardarEdicion(e) {
+    e.preventDefault();
+    if (!edit.titulo.trim()) { setError('El título no puede quedar vacío.'); return; }
+    setEnviando(true);
+    setError(null);
+    try {
+      const actualizado = await api.editarAviso(token, {
+        titulo: edit.titulo.trim(),
+        descripcion: edit.descripcion,
+        precio_esperado: edit.precio_esperado ? Number(edit.precio_esperado) : null,
+        zona: edit.zona,
+      });
       setPub(actualizado);
       setModo('ver');
     } catch (e) {
@@ -79,12 +112,50 @@ export default function GestionAviso() {
         {!vendido && modo === 'ver' && (
           <>
             <p style={estilos.texto}>
-              Cuando lo vendas, repórtalo aquí. Es rápido y nos ayuda a mantener el Tablón al día.
+              Cuando lo vendas, repórtalo aquí. También puedes editar el aviso (precio, descripción…).
             </p>
             <button className="btn btn-primario" style={{ width: '100%', padding: '14px' }} onClick={() => setModo('reportar')}>
               <CheckCircle2 size={18} /> Ya lo vendí
             </button>
+            <button className="btn btn-secundario" style={{ width: '100%', padding: '12px', marginTop: '10px' }} onClick={abrirEditar}>
+              <Pencil size={16} /> Editar aviso
+            </button>
           </>
+        )}
+
+        {/* Editar */}
+        {!vendido && modo === 'editar' && (
+          <form onSubmit={guardarEdicion} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label style={estilos.label}>
+              Título
+              <input type="text" value={edit.titulo} onChange={(e) => setEdit({ ...edit, titulo: e.target.value })}
+                maxLength={150} required style={estilos.input} />
+            </label>
+            <label style={estilos.label}>
+              Precio (COP)
+              <CampoPrecio value={edit.precio_esperado} onChange={(v) => setEdit({ ...edit, precio_esperado: v })}
+                placeholder="Ej: 3.500.000" style={estilos.input} />
+            </label>
+            <label style={estilos.label}>
+              Vereda o municipio
+              <input type="text" value={edit.zona} onChange={(e) => setEdit({ ...edit, zona: e.target.value })}
+                maxLength={150} style={estilos.input} />
+            </label>
+            <label style={estilos.label}>
+              Descripción
+              <textarea value={edit.descripcion} onChange={(e) => setEdit({ ...edit, descripcion: e.target.value })}
+                rows={5} maxLength={2000} style={{ ...estilos.input, resize: 'vertical' }} />
+              <span style={{ fontSize: '12px', textAlign: 'right', color: edit.descripcion.length >= 2000 ? 'var(--rojo-alerta)' : 'var(--carbon-suave)' }}>
+                {edit.descripcion.length} / 2000
+              </span>
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="button" className="btn btn-secundario" style={{ flex: 1 }} onClick={() => setModo('ver')}>Cancelar</button>
+              <button type="submit" className="btn btn-primario" style={{ flex: 1 }} disabled={enviando}>
+                {enviando ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </div>
+          </form>
         )}
 
         {!vendido && modo === 'reportar' && (

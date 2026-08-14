@@ -125,6 +125,13 @@ class ReportarVendido(BaseModel):
     monto_final: float = Field(..., gt=0)
 
 
+class EditarAviso(BaseModel):
+    titulo: Optional[str] = Field(None, min_length=2, max_length=150)
+    descripcion: Optional[str] = Field(None, max_length=2000)
+    precio_esperado: Optional[float] = Field(None, ge=0)
+    zona: Optional[str] = Field(None, max_length=150)
+
+
 class AnimalRechazar(BaseModel):
     motivo: str = Field(..., min_length=3, max_length=300)
 

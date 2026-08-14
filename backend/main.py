@@ -18,7 +18,7 @@ from database import Base, engine, get_db
 from models import Animal, Oferta, EstadoAnimalEnum, EspecieEnum, PropositoEnum, EstadoOfertaEnum
 from schemas import (
     AnimalCreate, AnimalOut, AnimalAdminOut, AnimalRechazar, PublicacionCreate,
-    PublicacionCreada, ReportarVendido,
+    PublicacionCreada, ReportarVendido, EditarAviso,
     OfertaCreate, OfertaOut, ContraofertaCreate, CerrarVentaRequest, AdminLogin,
 )
 
@@ -238,6 +238,33 @@ def reportar_vendido(token: str, datos: ReportarVendido, db: Session = Depends(g
         f"Propietario: {pub.propietario_nombre} ({pub.propietario_telefono})\n\n"
         f"Revisa que la comisión haya sido pagada."
     )
+    return pub
+
+
+@app.post("/api/gestionar/{token}/editar", response_model=AnimalAdminOut)
+def editar_aviso(token: str, datos: EditarAviso, db: Session = Depends(get_db)):
+    pub = db.query(Animal).filter(Animal.token_gestion == token).first()
+    if not pub:
+        raise HTTPException(status_code=404, detail="Enlace no válido")
+    if pub.estado == EstadoAnimalEnum.vendido:
+        raise HTTPException(status_code=400, detail="No se puede editar un aviso ya vendido")
+
+    if datos.titulo is not None:
+        # En animales el nombre visible es la raza; en el resto, el título.
+        if pub.categoria == "animales":
+            pub.raza = datos.titulo
+        else:
+            pub.titulo = datos.titulo
+    if datos.descripcion is not None:
+        pub.descripcion = datos.descripcion or None
+    if datos.precio_esperado is not None:
+        pub.precio_esperado = datos.precio_esperado
+    if datos.zona is not None:
+        pub.zona = datos.zona or None
+
+    db.commit()
+    db.refresh(pub)
+    enviar_telegram(f"✏️ El vendedor editó su aviso: {pub.titulo or pub.raza}")
     return pub
 
 
