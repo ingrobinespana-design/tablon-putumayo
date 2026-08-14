@@ -42,7 +42,7 @@ export default function PublicarVehiculo() {
 
   const marcasDisponibles = marcasDe(form.tipo);
   const marcaEfectiva = form.marcaSel === OTRA ? form.marcaOtra.trim() : form.marcaSel;
-  const lineas = form.marcaSel && form.marcaSel !== OTRA ? lineasDe(form.marcaSel) : [];
+  const lineas = form.marcaSel && form.marcaSel !== OTRA ? lineasDe(form.marcaSel, form.tipo) : [];
   const tieneListaLineas = lineas.length > 0;
   const modeloEfectivo = tieneListaLineas
     ? (form.modeloSel === OTRA ? form.modeloOtra.trim() : form.modeloSel)
