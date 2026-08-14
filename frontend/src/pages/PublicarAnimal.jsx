@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, CheckCircle2 } from 'lucide-react';
+import { Camera, CheckCircle2, X } from 'lucide-react';
 import { api } from '../services/api';
-import { ESPECIES, PROPOSITOS, PLACEHOLDER_RAZA } from '../config/catalogo';
+import { ESPECIES, PROPOSITOS, PLACEHOLDER_RAZA, MAX_FOTOS } from '../config/catalogo';
 import { comprimirImagen } from '../utils/imagen';
 import EnlaceGestion from '../components/EnlaceGestion';
 import CampoPrecio from '../components/CampoPrecio';
@@ -29,20 +29,31 @@ export default function PublicarAnimal() {
     zona: '',
   });
   const esLote = form.especie === 'aves' || form.especie === 'porcino';
-  const [foto, setFoto] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState(null);
+  const [fotos, setFotos] = useState([]);
+  const [comprimiendo, setComprimiendo] = useState(false);
 
   function actualizar(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
 
-  async function manejarFoto(e) {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    const optimizada = await comprimirImagen(archivo);
-    setFoto(optimizada);
-    setFotoPreview(URL.createObjectURL(optimizada));
+  async function agregarFotos(e) {
+    const nuevas = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!nuevas.length) return;
+    const cupo = MAX_FOTOS - fotos.length;
+    const aProcesar = nuevas.slice(0, Math.max(0, cupo));
+    if (!aProcesar.length) return;
+    setComprimiendo(true);
+    try {
+      const comp = await Promise.all(aProcesar.map(async (file) => {
+        const o = await comprimirImagen(file);
+        return { file: o, preview: URL.createObjectURL(o), pie: '' };
+      }));
+      setFotos((prev) => [...prev, ...comp].slice(0, MAX_FOTOS));
+    } finally { setComprimiendo(false); }
   }
+  function quitarFoto(i) { setFotos((prev) => prev.filter((_, idx) => idx !== i)); }
+  function cambiarPie(i, v) { setFotos((prev) => prev.map((f, idx) => (idx === i ? { ...f, pie: v } : f))); }
 
   async function manejarEnviar(e) {
     e.preventDefault();
@@ -63,7 +74,8 @@ export default function PublicarAnimal() {
       fd.append('propietario_nombre', form.propietario_nombre);
       fd.append('propietario_telefono', form.propietario_telefono);
       if (form.zona) fd.append('zona', form.zona);
-      if (foto) fd.append('foto', foto);
+      fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
+      fotos.forEach((f) => fd.append('fotos', f.file));
 
       const creado = await api.publicarAnimal(fd);
       setToken(creado.token_gestion);
@@ -211,14 +223,30 @@ export default function PublicarAnimal() {
             </span>
           </label>
 
-          <label style={estilos.labelFoto}>
-            <Camera size={18} />
-            {foto ? 'Cambiar foto' : 'Subir foto del animal'}
-            <input type="file" accept="image/*" onChange={manejarFoto} style={{ display: 'none' }} />
-          </label>
-          {fotoPreview && (
-            <img src={fotoPreview} alt="Vista previa" style={estilos.preview} />
-          )}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>Fotos del animal</div>
+            <p style={estilos.galeriaNota}>Sube varias (recomendado 3 o más): de frente, de lado, de cerca. A cada foto ponle un pie. Máximo {MAX_FOTOS}.</p>
+            <div style={estilos.galeria}>
+              {fotos.map((f, i) => (
+                <div key={i} style={estilos.fotoItem}>
+                  <div style={estilos.fotoPrevWrap}>
+                    <img src={f.preview} alt={`Foto ${i + 1}`} style={estilos.fotoPrev} />
+                    <button type="button" onClick={() => quitarFoto(i)} style={estilos.quitar} aria-label="Quitar foto"><X size={14} /></button>
+                  </div>
+                  <input type="text" value={f.pie} onChange={(e) => cambiarPie(i, e.target.value)}
+                    placeholder={`Pie ${i + 1}`} maxLength={60} style={estilos.pieInput} />
+                </div>
+              ))}
+              {fotos.length < MAX_FOTOS && (
+                <label style={estilos.agregarFoto}>
+                  <Camera size={22} />
+                  <span style={{ fontSize: '12.5px' }}>{comprimiendo ? 'Optimizando…' : 'Agregar foto'}</span>
+                  <input type="file" accept="image/*" multiple onChange={agregarFotos} disabled={comprimiendo} style={{ display: 'none' }} />
+                </label>
+              )}
+            </div>
+            <p style={estilos.galeriaContador}>{fotos.length} / {MAX_FOTOS} fotos</p>
+          </div>
         </div>
 
         <div style={estilos.bloque}>
@@ -366,13 +394,15 @@ const estilos = {
     cursor: 'pointer',
     width: 'fit-content',
   },
-  preview: {
-    width: '160px',
-    height: '120px',
-    objectFit: 'cover',
-    borderRadius: 'var(--radius)',
-    border: '1px solid var(--linea)',
-  },
+  galeriaNota: { fontSize: '13px', color: 'var(--carbon-suave)', margin: '0 0 10px', lineHeight: 1.5 },
+  galeria: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px' },
+  fotoItem: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  fotoPrevWrap: { position: 'relative' },
+  fotoPrev: { width: '100%', height: '96px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--linea)', display: 'block' },
+  quitar: { position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '999px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
+  pieInput: { padding: '7px 9px', borderRadius: 'var(--radius)', border: '1.5px solid var(--linea)', background: 'white', fontSize: '12.5px', width: '100%' },
+  agregarFoto: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '96px', border: '1.5px dashed var(--linea)', borderRadius: 'var(--radius)', color: 'var(--verde-pasto)', cursor: 'pointer', fontWeight: 600 },
+  galeriaContador: { fontSize: '12.5px', color: 'var(--carbon-suave)', margin: '8px 0 0' },
   exitoBox: {
     textAlign: 'center',
     padding: '40px',

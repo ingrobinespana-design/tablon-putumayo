@@ -37,6 +37,7 @@ export default function DetalleAnimal() {
   const [telefono, setTelefono] = useState('');
   const [monto, setMonto] = useState('');
   const [nota, setNota] = useState('');
+  const [fotoActiva, setFotoActiva] = useState(0);
 
   useEffect(() => {
     api
@@ -90,9 +91,11 @@ export default function DetalleAnimal() {
   }
 
   const sello = ETIQUETAS_SELLO[animal.estado] || ETIQUETAS_SELLO.disponible;
-  const fotoSrc = animal.foto_url
-    ? (animal.foto_url.startsWith('http') ? animal.foto_url : `${API_URL}${animal.foto_url}`)
-    : null;
+  const urlFoto = (u) => (u.startsWith('http') ? u : `${API_URL}${u}`);
+  const galeria = Array.isArray(animal.fotos) && animal.fotos.length
+    ? animal.fotos
+    : (animal.foto_url ? [{ url: animal.foto_url, pie: null }] : []);
+  const activa = galeria[fotoActiva] || galeria[0];
   const comisionPct = comisionPorEspecie(animal.especie);
   const desglose = monto ? calcularComision(monto, comisionPct) : null;
   const emoji = EMOJI_ESPECIE[animal.especie] || '🐄';
@@ -106,13 +109,26 @@ export default function DetalleAnimal() {
       </Link>
 
       <div className="detalle-layout">
-        <div style={estilos.fotoContenedor}>
-          {fotoSrc ? (
-            <img src={fotoSrc} alt={animal.raza} style={estilos.foto} />
-          ) : (
-            <div style={estilos.fotoPlaceholder}>
-              <span style={{ fontSize: '90px' }}>{emoji}</span>
-              <span style={estilos.sinFoto}>Sin foto</span>
+        <div>
+          <div style={estilos.fotoContenedor}>
+            {activa ? (
+              <img src={urlFoto(activa.url)} alt={animal.raza} style={estilos.foto} />
+            ) : (
+              <div style={estilos.fotoPlaceholder}>
+                <span style={{ fontSize: '90px' }}>{emoji}</span>
+                <span style={estilos.sinFoto}>Sin foto</span>
+              </div>
+            )}
+          </div>
+          {activa && activa.pie && <p style={estilos.pieFoto}>{activa.pie}</p>}
+          {galeria.length > 1 && (
+            <div style={estilos.miniaturas}>
+              {galeria.map((f, i) => (
+                <button key={i} type="button" onClick={() => setFotoActiva(i)}
+                  style={{ ...estilos.miniBtn, ...(i === fotoActiva ? estilos.miniActiva : {}) }}>
+                  <img src={urlFoto(f.url)} alt={f.pie || `Foto ${i + 1}`} style={estilos.mini} />
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -289,8 +305,13 @@ const estilos = {
     background: '#EDE6D3',
     borderRadius: 'var(--radius)',
     overflow: 'hidden',
-    minHeight: '360px',
+    aspectRatio: '4 / 3',
   },
+  pieFoto: { fontSize: '13.5px', color: 'var(--carbon-suave)', margin: '8px 2px 0', fontStyle: 'italic' },
+  miniaturas: { display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' },
+  miniBtn: { padding: 0, border: '2px solid transparent', borderRadius: 'var(--radius)', overflow: 'hidden', cursor: 'pointer', background: 'none', lineHeight: 0 },
+  miniActiva: { borderColor: 'var(--verde-pasto)' },
+  mini: { width: '64px', height: '48px', objectFit: 'cover', display: 'block' },
   foto: {
     width: '100%',
     height: '100%',

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import { MapPin, Camera } from 'lucide-react';
 import { API_URL } from '../services/api';
 import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE } from '../config/catalogo';
 import SelloDestacado from './SelloDestacado';
@@ -18,6 +18,7 @@ export default function TarjetaAnimal({ animal }) {
   const emoji = EMOJI_ESPECIE[animal.especie] || '🐄';
   const etiquetaEspecie = ETIQUETA_ESPECIE[animal.especie] || animal.especie;
   const esLote = animal.cantidad > 1;
+  const nFotos = Array.isArray(animal.fotos) ? animal.fotos.length : (fotoSrc ? 1 : 0);
 
   return (
     <Link to={`/animal/${animal.id}`} style={estilos.tarjeta}>
@@ -35,6 +36,9 @@ export default function TarjetaAnimal({ animal }) {
           {sello.texto}
         </span>
         <span style={estilos.selloEspecie}>{emoji} {etiquetaEspecie}</span>
+        {nFotos > 1 && (
+          <span style={estilos.contadorFotos}><Camera size={12} /> {nFotos}</span>
+        )}
       </div>
 
       <div style={estilos.cuerpo}>
@@ -121,6 +125,11 @@ const estilos = {
     fontWeight: 600,
     padding: '3px 9px',
     borderRadius: '999px',
+  },
+  contadorFotos: {
+    position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.62)',
+    color: 'white', fontSize: '12px', fontWeight: 600, padding: '3px 8px', borderRadius: '999px',
+    display: 'inline-flex', alignItems: 'center', gap: '4px',
   },
   cuerpo: {
     padding: '16px',

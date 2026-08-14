@@ -271,6 +271,25 @@ def editar_aviso(token: str, datos: EditarAviso, db: Session = Depends(get_db)):
 MAX_FOTOS = 10
 
 
+def _construir_galeria(fotos, pies):
+    """Sube las fotos y arma la galería [{url, pie}]. Devuelve (foto_principal, galeria)."""
+    lista_pies = []
+    if pies:
+        try:
+            lista_pies = json.loads(pies)
+        except Exception:
+            lista_pies = []
+    galeria = []
+    for i, f in enumerate((fotos or [])[:MAX_FOTOS]):
+        if f and f.filename:
+            url = _subir_foto(f)
+            if url:
+                pie = lista_pies[i] if i < len(lista_pies) else None
+                galeria.append({"url": url, "pie": (pie or None)})
+    foto_principal = galeria[0]["url"] if galeria else None
+    return foto_principal, (galeria or None)
+
+
 @app.post("/api/publicaciones", response_model=PublicacionCreada, status_code=201)
 def crear_publicacion(
     request: Request,
@@ -298,13 +317,6 @@ def crear_publicacion(
         except Exception:
             raise HTTPException(status_code=400, detail="Atributos inválidos")
 
-    lista_pies = []
-    if pies:
-        try:
-            lista_pies = json.loads(pies)
-        except Exception:
-            lista_pies = []
-
     datos = PublicacionCreate(
         categoria=categoria,
         titulo=titulo,
@@ -316,21 +328,12 @@ def crear_publicacion(
         zona=zona,
     )
 
-    # Galería de fotos (cada una con su pie opcional)
-    galeria = []
-    for i, f in enumerate(fotos[:MAX_FOTOS]):
-        if f and f.filename:
-            url = _subir_foto(f)
-            if url:
-                pie = lista_pies[i] if i < len(lista_pies) else None
-                galeria.append({"url": url, "pie": (pie or None)})
-
-    foto_principal = galeria[0]["url"] if galeria else None
+    foto_principal, galeria = _construir_galeria(fotos, pies)
 
     nuevo = Animal(
         **datos.model_dump(),
         foto_url=foto_principal,
-        fotos=(galeria or None),
+        fotos=galeria,
         estado=EstadoAnimalEnum.pendiente,
     )
     db.add(nuevo)
@@ -365,7 +368,8 @@ def publicar_animal(
     propietario_nombre: str = Form(...),
     propietario_telefono: str = Form(...),
     zona: Optional[str] = Form(None),
-    foto: Optional[UploadFile] = File(None),
+    pies: Optional[str] = Form(None),
+    fotos: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
 ):
     ip = request.client.host if request.client else "unknown"
@@ -387,12 +391,13 @@ def publicar_animal(
         zona=zona,
     )
 
-    foto_url = _subir_foto(foto)
+    foto_principal, galeria = _construir_galeria(fotos, pies)
 
     nuevo = Animal(
         **datos.model_dump(),
         categoria="animales",
-        foto_url=foto_url,
+        foto_url=foto_principal,
+        fotos=galeria,
         estado=EstadoAnimalEnum.pendiente,
     )
     db.add(nuevo)
