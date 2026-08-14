@@ -6,6 +6,7 @@ const RUTA_CATALOGO = {
   vehiculos: '/vehiculos',
   inmuebles: '/inmuebles',
   electrodomesticos: '/electrodomesticos',
+  varios: '/varios',
 };
 
 export default function Inicio({ modo = 'ver' }) {

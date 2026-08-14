@@ -70,7 +70,22 @@ export const CATEGORIAS = [
     desc: 'Casas, fincas, lotes y locales' },
   { valor: 'electrodomesticos', label: 'Electrodomésticos', emoji: '📺', activa: true,
     desc: 'Neveras, TVs, lavadoras, celulares y más' },
+  { valor: 'varios',           label: 'Otros / Varios',   emoji: '📦', activa: true,
+    desc: 'Negocios, muebles, herramientas y todo lo demás' },
 ];
+
+// Grupos opcionales para clasificar los avisos de "Otros / Varios".
+export const VARIOS_GRUPOS = [
+  { valor: 'negocio',      label: 'Negocio / emprendimiento' },
+  { valor: 'muebles',      label: 'Muebles y hogar' },
+  { valor: 'herramientas', label: 'Herramientas y maquinaria' },
+  { valor: 'ropa',         label: 'Ropa y accesorios' },
+  { valor: 'deportes',     label: 'Deportes y recreación' },
+  { valor: 'instrumentos', label: 'Instrumentos musicales' },
+  { valor: 'agro',         label: 'Insumos agrícolas' },
+  { valor: 'otro',         label: 'Otro' },
+];
+export const LABEL_VARIOS_GRUPO = Object.fromEntries(VARIOS_GRUPOS.map((g) => [g.valor, g.label]));
 export const EMOJI_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.valor, c.emoji]));
 export const LABEL_CATEGORIA = Object.fromEntries(CATEGORIAS.map((c) => [c.valor, c.label]));
 
@@ -81,6 +96,7 @@ export const COMISION_CATEGORIA = {
   vehiculos: { pct: 5, reparto: 'ambos' },
   inmuebles: { pct: 5, reparto: 'vendedor' },
   electrodomesticos: { pct: 2, reparto: 'ambos' },
+  varios: { pct: 5, reparto: 'ambos' }, // por defecto; ajustable
 };
 
 // Comisión aplicable a una publicación (animales usa su regla por especie).
