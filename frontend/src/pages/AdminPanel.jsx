@@ -180,7 +180,8 @@ export default function AdminPanel() {
   if (!clave) return null;
 
   // Comisión según la especie del animal abierto en el modal de ofertas.
-  const pctComision = animalSeleccionado ? comisionDe(animalSeleccionado).pct : 5;
+  const comInfo = animalSeleccionado ? comisionDe(animalSeleccionado) : { pct: 5, reparto: 'ambos' };
+  const pctComision = comInfo.pct;
 
   return (
     <div className="contenedor" style={{ padding: '28px 20px 60px' }}>
@@ -357,10 +358,25 @@ export default function AdminPanel() {
               {animalSeleccionado.zona} · Espera: {formatCOP(animalSeleccionado.precio_esperado)}
             </p>
 
+            <a
+              href={linkWhatsApp(
+                animalSeleccionado.propietario_telefono,
+                `Hola ${animalSeleccionado.propietario_nombre}, tu aviso "${nombrePub(animalSeleccionado)}" en Vende Putumayo tiene ofertas. ¿Ya lo vendiste o sigue disponible? Cuéntame para cerrarlo. ¡Gracias!`
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-whatsapp"
+              style={{ width: '100%', margin: '12px 0', padding: '12px' }}
+            >
+              <MessageCircle size={16} /> Recordar al vendedor (¿ya vendió?)
+            </a>
+
             <div style={estilos.notaComision}>
-              Comisión: <strong>{pctComision}%</strong> total — el comprador paga{' '}
-              <strong>{pctComision / 2}%</strong> extra y el vendedor cede <strong>{pctComision / 2}%</strong>.
-              Tú recibes el <strong>{pctComision}%</strong> completo.
+              {comInfo.reparto === 'vendedor' ? (
+                <>Comisión: <strong>{pctComision}%</strong> — la asume el vendedor. Tú recibes el <strong>{pctComision}%</strong>.</>
+              ) : (
+                <>Comisión: <strong>{pctComision}%</strong> total — comprador paga <strong>{pctComision / 2}%</strong> y vendedor cede <strong>{pctComision / 2}%</strong>. Tú recibes el <strong>{pctComision}%</strong>.</>
+              )}
             </div>
 
             {ofertas.length === 0 && (

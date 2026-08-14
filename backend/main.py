@@ -37,17 +37,13 @@ cloudinary.config(
 CLOUDINARY_CONFIGURADO = bool(os.getenv("CLOUDINARY_CLOUD_NAME"))
 
 
-def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]):
-    """Envía una notificación por Telegram cuando alguien publica un animal.
-    Falla en silencio si no está configurado o si el servicio no responde,
-    para que nunca bloquee la publicación del animal."""
+def enviar_telegram(mensaje: str):
+    """Envía un mensaje al Telegram del admin. Falla en silencio si no está
+    configurado o si el servicio no responde, para no bloquear nada."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         print("Telegram no está configurado, se omite la notificación.")
         return
     try:
-        mensaje = f"📣 Nueva publicación en Vende Putumayo\n\n{propietario} publicó: {raza}"
-        if zona:
-            mensaje += f" ({zona})"
         resp = requests.post(
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
             json={"chat_id": TELEGRAM_CHAT_ID, "text": mensaje},
@@ -56,6 +52,29 @@ def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]
         print(f"Notificación Telegram enviada, status={resp.status_code}")
     except Exception as e:
         print(f"Error enviando notificación Telegram: {e}")
+
+
+def notificar_publicacion_nueva(raza: str, propietario: str, zona: Optional[str]):
+    mensaje = f"📣 Nueva publicación en Vende Putumayo\n\n{propietario} publicó: {raza}"
+    if zona:
+        mensaje += f" ({zona})"
+    enviar_telegram(mensaje)
+
+
+def notificar_oferta_nueva(titulo: str, monto: float, comprador: str, telefono: Optional[str]):
+    """Avisa al admin cuando entra una oferta, para hacerle seguimiento y no
+    perder la comisión."""
+    monto_txt = "${:,.0f}".format(monto).replace(",", ".")
+    mensaje = (
+        f"💰 Nueva OFERTA en Vende Putumayo\n\n"
+        f"Aviso: {titulo}\n"
+        f"Oferta: {monto_txt}\n"
+        f"Comprador: {comprador}"
+    )
+    if telefono:
+        mensaje += f" ({telefono})"
+    mensaje += "\n\n👉 Entra al panel para gestionarla y cerrar la venta."
+    enviar_telegram(mensaje)
 
 Base.metadata.create_all(bind=engine)
 
@@ -335,6 +354,13 @@ def registrar_oferta(animal_id: str, oferta: OfertaCreate, db: Session = Depends
 
     db.commit()
     db.refresh(nueva_oferta)
+
+    notificar_oferta_nueva(
+        animal.titulo or animal.raza or "publicación",
+        nueva_oferta.monto_ofertado,
+        nueva_oferta.comprador_nombre,
+        nueva_oferta.comprador_telefono,
+    )
     return nueva_oferta
 
 
