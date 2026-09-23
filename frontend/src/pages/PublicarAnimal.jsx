@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2, X } from 'lucide-react';
 import { api } from '../services/api';
@@ -35,6 +35,19 @@ export default function PublicarAnimal() {
   function actualizar(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
+
+  // Pre-llenado desde Hato Sano (datos pasados por la URL)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (![...p.keys()].length) return;
+    setForm((prev) => ({
+      ...prev,
+      raza: p.get('raza') || prev.raza,
+      peso_kg: p.get('peso_kg') || prev.peso_kg,
+      descripcion: p.get('descripcion') || prev.descripcion,
+      proposito: p.get('proposito') || prev.proposito,
+    }));
+  }, []);
 
   async function agregarFotos(e) {
     const nuevas = Array.from(e.target.files || []);
