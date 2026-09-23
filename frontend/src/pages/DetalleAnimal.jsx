@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ArrowLeft } from 'lucide-react';
+import { MessageCircle, MapPin, ArrowLeft, ClipboardList } from 'lucide-react';
 import { api, API_URL } from '../services/api';
 import { ETIQUETA_ESPECIE, ETIQUETA_PROPOSITO, EMOJI_ESPECIE, comisionPorEspecie } from '../config/catalogo';
 import BotonCompartir from '../components/BotonCompartir';
@@ -179,6 +179,23 @@ export default function DetalleAnimal() {
           </div>
 
           {animal.descripcion && <p style={estilos.descripcion}>{animal.descripcion}</p>}
+
+          {animal.atributos?.hoja_vida_url && (
+            <a
+              href={animal.atributos.hoja_vida_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={estilos.hojaVida}
+            >
+              <ClipboardList size={22} style={{ flexShrink: 0 }} />
+              <span>
+                <strong>Ver hoja de vida (trazabilidad)</strong>
+                <span style={estilos.hojaVidaSub}>
+                  Pesajes, ganancia de peso e historial sanitario registrados en Hato Sano
+                </span>
+              </span>
+            </a>
+          )}
 
           {animal.precio_esperado && (
             <div style={estilos.precioBox}>
@@ -387,6 +404,27 @@ const estilos = {
     borderRadius: 'var(--radius)',
     fontSize: '15px',
     border: '1px solid var(--dorado)',
+  },
+  hojaVida: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '14px 16px',
+    background: 'rgba(61, 107, 53, 0.08)',
+    border: '1.5px solid var(--verde-pasto)',
+    borderRadius: 'var(--radius)',
+    color: 'var(--carbon)',
+    textDecoration: 'none',
+    marginBottom: '16px',
+    fontSize: '15px',
+  },
+  hojaVidaSub: {
+    display: 'block',
+    fontSize: '12.5px',
+    color: 'var(--carbon-suave)',
+    fontWeight: 400,
+    marginTop: '2px',
+    lineHeight: 1.4,
   },
   botones: { display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' },
   ofertaBox: {

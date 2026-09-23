@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import shutil
 import uuid
@@ -369,6 +370,7 @@ def publicar_animal(
     propietario_telefono: str = Form(...),
     zona: Optional[str] = Form(None),
     pies: Optional[str] = Form(None),
+    hoja_vida_url: Optional[str] = Form(None),   # enlace a la hoja de vida (trazabilidad) en Hato Sano
     fotos: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
 ):
@@ -393,11 +395,23 @@ def publicar_animal(
 
     foto_principal, galeria = _construir_galeria(fotos, pies)
 
+    # Enlace opcional a la hoja de vida (trazabilidad) generada en Hato Sano.
+    # Solo se acepta si es un enlace legítimo de la app Hato Sano; así en el
+    # catálogo el comprador puede ver pesajes, GDP e historial sanitario del
+    # animal. Si no cumple el patrón, simplemente se ignora (no rompe la publicación).
+    atributos_extra = None
+    if hoja_vida_url and re.match(
+        r"^https://hatosano-app\.vercel\.app/[^\s]*#hv=[A-Za-z0-9_-]+$",
+        hoja_vida_url.strip(),
+    ):
+        atributos_extra = {"hoja_vida_url": hoja_vida_url.strip()}
+
     nuevo = Animal(
         **datos.model_dump(),
         categoria="animales",
         foto_url=foto_principal,
         fotos=galeria,
+        atributos=atributos_extra,
         estado=EstadoAnimalEnum.pendiente,
     )
     db.add(nuevo)

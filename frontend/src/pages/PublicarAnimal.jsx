@@ -27,6 +27,7 @@ export default function PublicarAnimal() {
     propietario_nombre: '',
     propietario_telefono: '',
     zona: '',
+    hoja_vida_url: '',
   });
   const esLote = form.especie === 'aves' || form.especie === 'porcino';
   const [fotos, setFotos] = useState([]);
@@ -46,6 +47,7 @@ export default function PublicarAnimal() {
       peso_kg: p.get('peso_kg') || prev.peso_kg,
       descripcion: p.get('descripcion') || prev.descripcion,
       proposito: p.get('proposito') || prev.proposito,
+      hoja_vida_url: p.get('hoja_url') || prev.hoja_vida_url,
     }));
   }, []);
 
@@ -87,6 +89,7 @@ export default function PublicarAnimal() {
       fd.append('propietario_nombre', form.propietario_nombre);
       fd.append('propietario_telefono', form.propietario_telefono);
       if (form.zona) fd.append('zona', form.zona);
+      if (form.hoja_vida_url) fd.append('hoja_vida_url', form.hoja_vida_url);
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
 
@@ -131,6 +134,13 @@ export default function PublicarAnimal() {
       {error && <p style={estilos.errorTexto}>{error}</p>}
 
       <form onSubmit={manejarEnviar} style={estilos.form}>
+        {form.hoja_vida_url && (
+          <div style={estilos.trazaNota}>
+            📋 Se adjuntará la <strong>hoja de vida con trazabilidad</strong> de este animal
+            (pesajes, ganancia de peso e historial sanitario). Los compradores podrán verla
+            completa desde la publicación.
+          </div>
+        )}
         <div style={estilos.bloque}>
           <h3 style={estilos.bloqueTitulo}>Datos del animal</h3>
 
@@ -341,6 +351,15 @@ const estilos = {
     padding: '12px 16px',
     borderRadius: 'var(--radius)',
     marginBottom: '20px',
+  },
+  trazaNota: {
+    background: 'rgba(61, 107, 53, 0.08)',
+    border: '1px solid var(--verde-exito)',
+    color: 'var(--carbon)',
+    padding: '12px 16px',
+    borderRadius: 'var(--radius)',
+    fontSize: '13.5px',
+    lineHeight: 1.55,
   },
   form: {
     display: 'flex',
