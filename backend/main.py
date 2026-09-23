@@ -272,21 +272,50 @@ def editar_aviso(token: str, datos: EditarAviso, db: Session = Depends(get_db)):
 MAX_FOTOS = 10
 
 
-def _construir_galeria(fotos, pies):
-    """Sube las fotos y arma la galería [{url, pie}]. Devuelve (foto_principal, galeria)."""
+def _galeria_desde_urls(foto_urls):
+    """Fotos ya alojadas en NUESTRO Cloudinary (p. ej. subidas desde Hato Sano al
+    publicar). Se validan contra el origen de Cloudinary para no aceptar imágenes
+    externas arbitrarias. Acepta una lista JSON de strings o de {url, pie}."""
+    if not foto_urls:
+        return []
+    try:
+        data = json.loads(foto_urls)
+    except Exception:
+        return []
+    cloud = os.getenv("CLOUDINARY_CLOUD_NAME") or ""
+    prefijo = f"https://res.cloudinary.com/{cloud}/" if cloud else "https://res.cloudinary.com/"
+    out = []
+    for item in (data or []):
+        if isinstance(item, dict):
+            url = (item.get("url") or "").strip()
+            pie = item.get("pie")
+        else:
+            url = str(item or "").strip()
+            pie = None
+        if url and url.startswith(prefijo):
+            out.append({"url": url, "pie": (pie or None)})
+    return out
+
+
+def _construir_galeria(fotos, pies, foto_urls=None):
+    """Arma la galería [{url, pie}]. Primero las fotos ya subidas (foto_urls, p. ej.
+    desde Hato Sano), luego sube los archivos nuevos. Devuelve (foto_principal, galeria)."""
     lista_pies = []
     if pies:
         try:
             lista_pies = json.loads(pies)
         except Exception:
             lista_pies = []
-    galeria = []
+    galeria = _galeria_desde_urls(foto_urls)
     for i, f in enumerate((fotos or [])[:MAX_FOTOS]):
+        if len(galeria) >= MAX_FOTOS:
+            break
         if f and f.filename:
             url = _subir_foto(f)
             if url:
                 pie = lista_pies[i] if i < len(lista_pies) else None
                 galeria.append({"url": url, "pie": (pie or None)})
+    galeria = galeria[:MAX_FOTOS]
     foto_principal = galeria[0]["url"] if galeria else None
     return foto_principal, (galeria or None)
 
@@ -371,6 +400,7 @@ def publicar_animal(
     zona: Optional[str] = Form(None),
     pies: Optional[str] = Form(None),
     hoja_vida_url: Optional[str] = Form(None),   # enlace a la hoja de vida (trazabilidad) en Hato Sano
+    foto_urls: Optional[str] = Form(None),       # fotos ya subidas a Cloudinary desde Hato Sano
     fotos: List[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
 ):
@@ -393,7 +423,7 @@ def publicar_animal(
         zona=zona,
     )
 
-    foto_principal, galeria = _construir_galeria(fotos, pies)
+    foto_principal, galeria = _construir_galeria(fotos, pies, foto_urls)
 
     # Enlace opcional a la hoja de vida (trazabilidad) generada en Hato Sano.
     # Solo se acepta si es un enlace legítimo de la app Hato Sano; así en el

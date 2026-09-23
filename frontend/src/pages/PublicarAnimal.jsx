@@ -31,6 +31,7 @@ export default function PublicarAnimal() {
   });
   const esLote = form.especie === 'aves' || form.especie === 'porcino';
   const [fotos, setFotos] = useState([]);
+  const [fotosPre, setFotosPre] = useState([]); // fotos ya subidas (traídas de Hato Sano)
   const [comprimiendo, setComprimiendo] = useState(false);
 
   function actualizar(campo, valor) {
@@ -49,13 +50,19 @@ export default function PublicarAnimal() {
       proposito: p.get('proposito') || prev.proposito,
       hoja_vida_url: p.get('hoja_url') || prev.hoja_vida_url,
     }));
+    const fu = p.get('foto_urls');
+    if (fu) {
+      setFotosPre(
+        fu.split(',').map((u) => u.trim()).filter(Boolean).slice(0, MAX_FOTOS).map((u) => ({ url: u, pie: '' }))
+      );
+    }
   }, []);
 
   async function agregarFotos(e) {
     const nuevas = Array.from(e.target.files || []);
     e.target.value = '';
     if (!nuevas.length) return;
-    const cupo = MAX_FOTOS - fotos.length;
+    const cupo = MAX_FOTOS - fotos.length - fotosPre.length;
     const aProcesar = nuevas.slice(0, Math.max(0, cupo));
     if (!aProcesar.length) return;
     setComprimiendo(true);
@@ -69,6 +76,8 @@ export default function PublicarAnimal() {
   }
   function quitarFoto(i) { setFotos((prev) => prev.filter((_, idx) => idx !== i)); }
   function cambiarPie(i, v) { setFotos((prev) => prev.map((f, idx) => (idx === i ? { ...f, pie: v } : f))); }
+  function quitarFotoPre(i) { setFotosPre((prev) => prev.filter((_, idx) => idx !== i)); }
+  function cambiarPiePre(i, v) { setFotosPre((prev) => prev.map((f, idx) => (idx === i ? { ...f, pie: v } : f))); }
 
   async function manejarEnviar(e) {
     e.preventDefault();
@@ -90,6 +99,7 @@ export default function PublicarAnimal() {
       fd.append('propietario_telefono', form.propietario_telefono);
       if (form.zona) fd.append('zona', form.zona);
       if (form.hoja_vida_url) fd.append('hoja_vida_url', form.hoja_vida_url);
+      if (fotosPre.length) fd.append('foto_urls', JSON.stringify(fotosPre.map((f) => ({ url: f.url, pie: f.pie || '' }))));
       fd.append('pies', JSON.stringify(fotos.map((f) => f.pie || '')));
       fotos.forEach((f) => fd.append('fotos', f.file));
 
@@ -249,7 +259,22 @@ export default function PublicarAnimal() {
           <div>
             <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>Fotos del animal</div>
             <p style={estilos.galeriaNota}>Sube varias (recomendado 3 o más): de frente, de lado, de cerca. A cada foto ponle un pie. Máximo {MAX_FOTOS}.</p>
+            {fotosPre.length > 0 && (
+              <p style={{ ...estilos.galeriaNota, color: 'var(--verde-pasto)', fontWeight: 600, marginBottom: '10px' }}>
+                ✓ {fotosPre.length} foto{fotosPre.length > 1 ? 's' : ''} traída{fotosPre.length > 1 ? 's' : ''} desde Hato Sano. Puedes agregar más o quitar las que no quieras.
+              </p>
+            )}
             <div style={estilos.galeria}>
+              {fotosPre.map((f, i) => (
+                <div key={`pre-${i}`} style={estilos.fotoItem}>
+                  <div style={estilos.fotoPrevWrap}>
+                    <img src={f.url} alt={`Foto ${i + 1}`} style={estilos.fotoPrev} />
+                    <button type="button" onClick={() => quitarFotoPre(i)} style={estilos.quitar} aria-label="Quitar foto"><X size={14} /></button>
+                  </div>
+                  <input type="text" value={f.pie} onChange={(e) => cambiarPiePre(i, e.target.value)}
+                    placeholder={`Pie ${i + 1}`} maxLength={60} style={estilos.pieInput} />
+                </div>
+              ))}
               {fotos.map((f, i) => (
                 <div key={i} style={estilos.fotoItem}>
                   <div style={estilos.fotoPrevWrap}>
@@ -260,7 +285,7 @@ export default function PublicarAnimal() {
                     placeholder={`Pie ${i + 1}`} maxLength={60} style={estilos.pieInput} />
                 </div>
               ))}
-              {fotos.length < MAX_FOTOS && (
+              {(fotos.length + fotosPre.length) < MAX_FOTOS && (
                 <label style={estilos.agregarFoto}>
                   <Camera size={22} />
                   <span style={{ fontSize: '12.5px' }}>{comprimiendo ? 'Optimizando…' : 'Agregar foto'}</span>
@@ -268,7 +293,7 @@ export default function PublicarAnimal() {
                 </label>
               )}
             </div>
-            <p style={estilos.galeriaContador}>{fotos.length} / {MAX_FOTOS} fotos</p>
+            <p style={estilos.galeriaContador}>{fotos.length + fotosPre.length} / {MAX_FOTOS} fotos</p>
           </div>
         </div>
 
